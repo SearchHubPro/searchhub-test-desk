@@ -457,10 +457,6 @@
         <span style="font-size:10px; color:#718096; font-weight:normal; margin-top:4px;">利益商品自動狙撃・即時購入ログ</span>
       </button>
 
-      <button class="dash-btn" onclick="openSheetLinksModal()">
-        <i class="fas fa-table" style="color:#3182ce;"></i>各種シート
-        <span style="font-size:10px; color:#718096; font-weight:normal; margin-top:4px;">スプレッドシートを直接開く</span>
-      </button>
     </div>
   </div> 
 
@@ -1047,20 +1043,6 @@
     </div>
   </div>
 
-  <div id="sheetLinksModal" class="modal">
-    <div class="modal-content" style="max-width: 320px;">
-      <h3 style="margin-top:0; border-bottom:2px solid #e2e8f0; padding-bottom:8px;"><i class="fas fa-external-link-alt"></i> 各種シートを開く</h3>
-      <div style="display:flex; flex-direction:column; gap:12px; margin-top:16px;">
-        <button onclick="openSheet('sh_ssurl')" style="background:#1a365d; color:white; border:none; padding:12px; border-radius:8px; font-weight:bold; font-size:14px; cursor:pointer; text-align:left; padding-left:20px;"><i class="fas fa-chart-bar" style="width:24px;"></i> Manager シート</button>
-        <button onclick="openSheet('sh_researcher_url')" style="background:#a855f7; color:white; border:none; padding:12px; border-radius:8px; font-weight:bold; font-size:14px; cursor:pointer; text-align:left; padding-left:20px;"><i class="fas fa-search" style="width:24px;"></i> Researcher シート</button>
-        <button onclick="openSheet('sh_watcher_sheet_url')" style="background:#07A27B; color:white; border:none; padding:12px; border-radius:8px; font-weight:bold; font-size:14px; cursor:pointer; text-align:left; padding-left:20px;"><i class="fas fa-eye" style="width:24px;"></i> Watcher シート</button>
-        <button onclick="openSheet('sh_sniper_sheet_url')" style="background:#e53e3e; color:white; border:none; padding:12px; border-radius:8px; font-weight:bold; font-size:14px; cursor:pointer; text-align:left; padding-left:20px;"><i class="fas fa-crosshairs" style="width:24px;"></i> Sniper 極 シート</button>
-      </div>
-      <div class="modal-actions" style="margin-top:20px;">
-        <button style="background:#e2e8f0; color:#4a5568; width:100%;" onclick="closeSheetLinksModal()">閉じる</button>
-      </div>
-    </div>
-  </div>
   
 
   <div id="expenseModal" class="modal">
@@ -1102,36 +1084,19 @@
   <div id="configModal" class="modal">
     <div class="modal-content">
       <h3 style="margin-bottom:12px;">⚙️ アプリ基本設定</h3>
-      
+
+      <label style="color:#d9534f;">Supabase APIキー(必須)</label>
+      <input type="text" id="cfgSupabaseKey" placeholder="発行されたAPIキーを貼り付け">
+
       <label>Keepa APIキー</label>
       <input type="text" id="cfgKeepa" placeholder="あなたのKeepaAPIキー">
       
-      <label>SearchHub : ManagerのURL</label>
-      <input type="url" id="cfgSsUrl" placeholder="https://docs.google.com/spreadsheets/...">
+      <label style="color:#d9534f;">マネージャーAPI URL(Supabase・その1)</label>
+      <input type="url" id="cfgSniperUrl" placeholder="https://<プロジェクトID>.supabase.co/functions/v1/manager">
       
-      <label>SearchHub : ResearcherのURL</label>
-      <input type="url" id="cfgResearcherUrl" placeholder="https://docs.google.com/spreadsheets/...">
+      <label style="color:#d9534f;">マネージャーAPI URL(Supabase・その2/予備)</label>
+      <input type="url" id="cfg10SiteUrl" placeholder="https://<プロジェクトID>.supabase.co/functions/v1/manager">
 
-      <label>SearchHub : WatcherのURL</label>
-      <input type="url" id="cfgWatcherSheetUrl" placeholder="https://docs.google.com/spreadsheets/...">
-
-      <label>SearchHub Sniper 極のURL</label>
-      <input type="url" id="cfgSniperSheetUrl" placeholder="https://docs.google.com/spreadsheets/...">
-
-      <label>ヤフオクチェッカーのシートURL</label>
-      <input type="url" id="cfgYahooUrl" placeholder="https://docs.google.com/spreadsheets/...">
-      
-      <div style="border-top:1px dashed #ccc; margin:15px 0 5px 0; padding-top:5px;"></div>
-      
-      <label>SearchHub Sniper 極のGASURL</label>
-      <input type="url" id="cfgSniperUrl" placeholder="https://script.google.com/macros/.../exec">
-      
-      <label>SearchHub : WatcherのGASURL</label>
-      <input type="url" id="cfg10SiteUrl" placeholder="https://script.google.com/macros/.../exec">
-
-      <label>SearchHub : ResearcherのGAS URL</label>
-      <input type="url" id="cfgResearcherGasUrl" placeholder="https://script.google.com/macros/.../exec">
-      
       <div style="border-top:1px dashed #ccc; margin:15px 0 5px 0; padding-top:5px;"></div>
       
       <label>AmazonセラーID</label>
@@ -1240,6 +1205,19 @@
       set: function(key, val) { try { localStorage.setItem(key, val); } catch(e) {} }
     };
 
+    // 🌟 Supabase移行対応:Authorizationヘッダーを自動付与するfetchラッパー
+    function fetchWithAuth(url, options) {
+      options = options || {};
+      const headers = Object.assign({}, options.headers, {
+        'Authorization': 'Bearer ' + AppStorage.get('sh_supabase_key', '')
+      });
+      if (options.body && !headers['Content-Type']) {
+        headers['Content-Type'] = 'application/json';
+      }
+      options.headers = headers;
+      return fetch(url, options);
+    }
+
     const siteKeyMap = {
       'sniper-mercari': 'Sメルカリ', 'sniper-paypay': 'Sヤフフリ', 'sniper-offmall': 'Sオフモ',
       'watcher-mercari': 'メルカリ', 'watcher-paypay': 'ヤフーフリマ', 'watcher-yahoo': 'ヤフオク',
@@ -1274,7 +1252,7 @@
       if (!ssUrl || !targetGasUrl) return;
       
       try {
-        const res = await fetch(targetGasUrl, {
+        const res = await fetchWithAuth(targetGasUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({ command: 'getAllOwnInventoryCounts', ssUrl: ssUrl })
@@ -1345,7 +1323,7 @@
       if (!targetGasUrl || !yahooSsUrl) return;
 
       try {
-        const res = await fetch(targetGasUrl, {
+        const res = await fetchWithAuth(targetGasUrl, {
           method: 'POST',
           // 💡 これで正しいヤフオクのURLがGAS（ウォッチャー）に飛ぶ！
           body: JSON.stringify({ command: 'getYahooCheckerData', ssUrl: yahooSsUrl }) 
@@ -1426,7 +1404,7 @@
 
       try {
         // 💡 追加：GASに送るデータの中に `researcherUrl: resUrl` を混ぜてあげる！
-        const res = await fetch(targetGasUrl, { method: 'POST', body: JSON.stringify({ command: 'getDashboardData', ssUrl: ssUrl, researcherUrl: resUrl }) });
+        const res = await fetchWithAuth(targetGasUrl, { method: 'POST', body: JSON.stringify({ command: 'getDashboardData', ssUrl: ssUrl, researcherUrl: resUrl }) });
         const json = await res.json();
         if (json.success && json.data) {
           homeData = json.data;
@@ -1824,8 +1802,8 @@
           body: payload 
         };
 
-        if (urlSniper) fetch(urlSniper, options).catch(e => {});
-        if (url10) fetch(url10, options).catch(e => {});
+        if (urlSniper) fetchWithAuth(urlSniper, options).catch(e => {});
+        if (url10) fetchWithAuth(url10, options).catch(e => {});
       }, 500); // 👈 ここを 500（0.5秒）にするのが最強のバランスや！
     }
 
@@ -1871,8 +1849,8 @@ async function syncPatrolData() {
           if(!urlSniper && !url10) return;
           try {
             const fetchPromises = []; const cacheBuster = "&t=" + new Date().getTime();
-            if (urlSniper) fetchPromises.push(fetch(urlSniper + "?command=mobileData" + cacheBuster).then(r => r.json()).catch(() => null)); else fetchPromises.push(Promise.resolve(null));
-            if (url10) fetchPromises.push(fetch(url10 + "?command=mobileData" + cacheBuster).then(r => r.json()).catch(() => null)); else fetchPromises.push(Promise.resolve(null));
+            if (urlSniper) fetchPromises.push(fetchWithAuth(urlSniper + "?command=mobileData" + cacheBuster).then(r => r.json()).catch(() => null)); else fetchPromises.push(Promise.resolve(null));
+            if (url10) fetchPromises.push(fetchWithAuth(url10 + "?command=mobileData" + cacheBuster).then(r => r.json()).catch(() => null)); else fetchPromises.push(Promise.resolve(null));
             const [resSniper, res10] = await Promise.all(fetchPromises);
             hideLoader();
 
@@ -1924,14 +1902,9 @@ async function syncPatrolData() {
         function forceReload(btn) { btn.style.transform = "rotate(360deg)"; setTimeout(() => btn.style.transform = "rotate(0deg)", 500); syncPatrolData(); fetchDashboardData(); }
         
         function openConfig() {
+          document.getElementById("cfgSupabaseKey").value = AppStorage.get("sh_supabase_key", "");
           document.getElementById("cfgKeepa").value = AppStorage.get("sh_keepa", ""); 
-          document.getElementById("cfgSsUrl").value = AppStorage.get("sh_ssurl", "");
-          document.getElementById("cfgResearcherUrl").value = AppStorage.get("sh_researcher_url", ""); 
           // 💡 追加：WatcherとSniperのシートURLを読み込む
-          document.getElementById("cfgResearcherGasUrl").value = AppStorage.get("sh_researcher_gas_url", "");
-          document.getElementById("cfgWatcherSheetUrl").value = AppStorage.get("sh_watcher_sheet_url", ""); 
-          document.getElementById("cfgSniperSheetUrl").value = AppStorage.get("sh_sniper_sheet_url", ""); 
-          document.getElementById("cfgYahooUrl").value = AppStorage.get("sh_yahoo_sheet_url", ""); 
           
           document.getElementById("cfgSniperUrl").value = AppStorage.get("sh_sniper_url", ""); 
           document.getElementById("cfg10SiteUrl").value = AppStorage.get("sh_tensite_url", "");
@@ -1942,14 +1915,14 @@ async function syncPatrolData() {
         function closeConfig() { document.getElementById("configModal").style.display = "none"; }
         
         function saveConfig() {
+          // 🌟 Supabase移行:スプレッドシートURLは使わなくなったが、
+          // 既存コード内の「未入力チェック」を通すため裏で固定値をセットしておく
+          ["sh_ssurl","sh_researcher_url","sh_researcher_gas_url","sh_watcher_sheet_url","sh_sniper_sheet_url","sh_yahoo_sheet_url"].forEach(k => {
+            if (!AppStorage.get(k, "")) AppStorage.set(k, "supabase");
+          });
+          AppStorage.set("sh_supabase_key", document.getElementById("cfgSupabaseKey").value.trim());
           AppStorage.set("sh_keepa", document.getElementById("cfgKeepa").value.trim()); 
-          AppStorage.set("sh_ssurl", document.getElementById("cfgSsUrl").value.trim());
-          AppStorage.set("sh_researcher_url", document.getElementById("cfgResearcherUrl").value.trim()); 
           // 💡 追加：WatcherとSniperのシートURLを保存する
-          AppStorage.set("sh_researcher_gas_url", document.getElementById("cfgResearcherGasUrl").value.trim());
-          AppStorage.set("sh_watcher_sheet_url", document.getElementById("cfgWatcherSheetUrl").value.trim()); 
-          AppStorage.set("sh_sniper_sheet_url", document.getElementById("cfgSniperSheetUrl").value.trim()); 
-          AppStorage.set("sh_yahoo_sheet_url", document.getElementById("cfgYahooUrl").value.trim()); 
           
           AppStorage.set("sh_sniper_url", document.getElementById("cfgSniperUrl").value.trim()); 
           AppStorage.set("sh_tensite_url", document.getElementById("cfg10SiteUrl").value.trim());
@@ -1969,7 +1942,7 @@ async function syncPatrolData() {
           let nextStatus = currentStatus === "on" ? "off" : "on";
           updateDiscordBtnUI(nextStatus);
           try {
-            const res = await fetch(sniperUrl, { method: 'POST', body: JSON.stringify({ command: 'toggleDiscord', status: nextStatus }) });
+            const res = await fetchWithAuth(sniperUrl, { method: 'POST', body: JSON.stringify({ command: 'toggleDiscord', status: nextStatus }) });
             const json = await res.json();
             if (json.success) AppStorage.set("sh_discord_toggle", nextStatus);
             else { updateDiscordBtnUI(currentStatus); alert("設定の同期に失敗したわ。"); }
@@ -2068,7 +2041,7 @@ async function syncPatrolData() {
           if (!ssUrl || !targetGasUrl) { openConfig(); return alert("⚙️設定から『販売管理シートURL』と『GAS URL』を登録してな！"); }
           resDiv.innerHTML = '<div class="loading-spinner">⌛ 台帳からすべての実績を抽出中...</div>';
           try {
-            const res = await fetch(targetGasUrl, { method: 'POST', body: JSON.stringify({ command: 'findPastData', ssUrl: ssUrl, asin: asin }) });
+            const res = await fetchWithAuth(targetGasUrl, { method: 'POST', body: JSON.stringify({ command: 'findPastData', ssUrl: ssUrl, asin: asin }) });
             const json = await res.json();
             if (!json.success || !json.data || json.data.length === 0) { resDiv.innerHTML = '<div class="card" style="text-align:center; color:#a0aec0; padding:30px 10px;">販売実績が見つかりませんでした。</div>'; return; }
             let html = "";
@@ -2387,7 +2360,7 @@ async function syncPatrolData() {
             select.innerHTML = '<option value="">⚠️ 設定URLが未登録です</option>'; return;
           }
           try {
-            const res = await fetch(targetGasUrl, { method: 'POST', body: JSON.stringify({ command: 'getSuppliers', ssUrl: ssUrl }) });
+            const res = await fetchWithAuth(targetGasUrl, { method: 'POST', body: JSON.stringify({ command: 'getSuppliers', ssUrl: ssUrl }) });
             const json = await res.json();
             if (json.success && json.data.length > 0) {
               select.innerHTML = '<option value="">選択してください</option>';
@@ -2451,7 +2424,7 @@ async function syncPatrolData() {
           btn.disabled = true; btn.innerHTML = "⌛ 登録中...";
           
           try {
-            const res = await fetch(targetGasUrl, { // 👈 targetGasUrl に戻した！
+            const res = await fetchWithAuth(targetGasUrl, { // 👈 targetGasUrl に戻した！
               method: 'POST',
               body: JSON.stringify({ 
                 command: 'register', 
@@ -2506,7 +2479,7 @@ async function syncPatrolData() {
           if (!ssUrl || !targetGasUrl) { openConfig(); resDiv.innerHTML = '<div class="card" style="text-align:center; padding:20px; color:#e53e3e; font-weight:bold;">⚙️設定を完了させてな！</div>'; return; }
           resDiv.innerHTML = '<div class="loading-spinner">⌛ マネージャーシートから現役の在庫リストを抽出中...</div>'; countEl.innerText = "同期中...";
           try {
-            const res = await fetch(targetGasUrl, { method: 'POST', body: JSON.stringify({ command: 'getInventoryPrice', ssUrl: ssUrl }) });
+            const res = await fetchWithAuth(targetGasUrl, { method: 'POST', body: JSON.stringify({ command: 'getInventoryPrice', ssUrl: ssUrl }) });
             const json = await res.json();
             if (!json.success || !json.data || json.data.length === 0) {
               resDiv.innerHTML = '<div class="card" style="text-align:center; color:#a0aec0; padding:30px 10px;">現在、出品中の商品は見つかりませんでした。</div>';
@@ -2606,7 +2579,7 @@ async function syncPatrolData() {
           document.getElementById(prefix + '-summary').innerHTML = '<div class="loading-spinner">⌛ 最新の月別データを集計中...</div>';
           
           try {
-            const res = await fetch(targetGasUrl, { method: 'POST', body: JSON.stringify({ command: 'getMonthlyData', ssUrl: ssUrl }) });
+            const res = await fetchWithAuth(targetGasUrl, { method: 'POST', body: JSON.stringify({ command: 'getMonthlyData', ssUrl: ssUrl }) });
             const json = await res.json();
             if (!json.success) { document.getElementById(prefix + '-summary').innerHTML = '<div class="card" style="color:red; text-align:center;">エラー: ' + json.message + '</div>'; return; }
             
@@ -2795,7 +2768,7 @@ async function syncPatrolData() {
           }
 
           try {
-            const res = await fetch(targetGasUrl, { // 👈 targetGasUrl に戻した！
+            const res = await fetchWithAuth(targetGasUrl, { // 👈 targetGasUrl に戻した！
               method: 'POST',
               headers: { 'Content-Type': 'text/plain;charset=utf-8' },
               body: JSON.stringify({ command: 'getResearcherData', ssUrl: researcherUrl })
@@ -2934,7 +2907,7 @@ async function syncPatrolData() {
             try {
               // 🚨 1. CORSエラーの原因だった「headers」の指定を完全削除！
               // 🚨 2. 送るデータも元の asinsToDelete に戻す！
-              const res = await fetch(targetGasUrl, { 
+              const res = await fetchWithAuth(targetGasUrl, { 
                 method: 'POST', 
                 body: JSON.stringify({ 
                   command: 'updateResearcherSheet', 
@@ -3003,7 +2976,7 @@ async function syncPatrolData() {
           let targetGasUrl = AppStorage.get("sh_tensite_url", "") || AppStorage.get("sh_sniper_url", "");
 
           try {
-            const res = await fetch(targetGasUrl, { 
+            const res = await fetchWithAuth(targetGasUrl, { 
               method: 'POST', 
               body: JSON.stringify({ command: 'registerEliteItems', ssUrl: researcherUrl, items: globalResearcherData }) 
             });
@@ -3079,7 +3052,7 @@ async function syncPatrolData() {
           countEl.innerText = "同期中...";
 
           try {
-            const res = await fetch(targetGasUrl, {
+            const res = await fetchWithAuth(targetGasUrl, {
               method: 'POST',
               body: JSON.stringify({ command: 'getLedgerData', ssUrl: ssUrl })
             });
@@ -3306,7 +3279,7 @@ async function syncPatrolData() {
         }
 
         try {
-          const res = await fetch(targetGasUrl, {
+          const res = await fetchWithAuth(targetGasUrl, {
             method: 'POST',
             body: JSON.stringify({ 
               command: 'uploadReport', 
@@ -3375,7 +3348,7 @@ async function syncPatrolData() {
       let targetGasUrl = AppStorage.get("sh_tensite_url", "") || AppStorage.get("sh_sniper_url", "");
       
       try {
-        const res = await fetch(targetGasUrl, {
+        const res = await fetchWithAuth(targetGasUrl, {
           method: 'POST',
           body: JSON.stringify({ command: 'toggleListing', ssUrl: ssUrl, no: no, isListed: nextState })
         });
@@ -3403,7 +3376,7 @@ async function syncPatrolData() {
       let targetGasUrl = AppStorage.get("sh_tensite_url", "") || AppStorage.get("sh_sniper_url", "");
       
       try {
-        const res = await fetch(targetGasUrl, {
+        const res = await fetchWithAuth(targetGasUrl, {
           method: 'POST',
           body: JSON.stringify({ command: 'relistLedgerItem', ssUrl: ssUrl, no: no })
         });
@@ -3437,7 +3410,7 @@ async function syncPatrolData() {
         let targetGasUrl = AppStorage.get("sh_tensite_url", "") || AppStorage.get("sh_sniper_url", "");
         if (ssUrl && targetGasUrl) {
           try {
-            const res = await fetch(targetGasUrl, { method: 'POST', body: JSON.stringify({ command: 'getSuppliers', ssUrl: ssUrl }) });
+            const res = await fetchWithAuth(targetGasUrl, { method: 'POST', body: JSON.stringify({ command: 'getSuppliers', ssUrl: ssUrl }) });
             const json = await res.json();
             if (json.success && json.data) window.globalSupplierData = json.data;
           } catch(e) {}
@@ -3484,7 +3457,7 @@ async function syncPatrolData() {
       let targetGasUrl = AppStorage.get("sh_tensite_url", "") || AppStorage.get("sh_sniper_url", "");
 
       try {
-        const res = await fetch(targetGasUrl, {
+        const res = await fetchWithAuth(targetGasUrl, {
           method: 'POST',
           body: JSON.stringify({ command: 'deleteLedgerItem', ssUrl: ssUrl, no: no })
         });
@@ -3530,7 +3503,7 @@ async function syncPatrolData() {
       };
       
       try {
-        const res = await fetch(targetGasUrl, {
+        const res = await fetchWithAuth(targetGasUrl, {
           method: 'POST',
           body: JSON.stringify({ command: 'updateLedgerItem', ssUrl: ssUrl, data: payload })
         });
@@ -3556,7 +3529,7 @@ async function syncPatrolData() {
       if (!ssUrl || !targetGasUrl) return;
 
       try {
-        const res = await fetch(targetGasUrl, { method: 'POST', body: JSON.stringify({ command: 'getConditions', ssUrl: ssUrl }) });
+        const res = await fetchWithAuth(targetGasUrl, { method: 'POST', body: JSON.stringify({ command: 'getConditions', ssUrl: ssUrl }) });
         const json = await res.json();
         if (json.success && json.data) {
           globalConditionData = json.data;
@@ -3603,7 +3576,7 @@ async function syncPatrolData() {
       loading.style.display = 'block';
 
       try {
-        const res = await fetch(targetGasUrl, {
+        const res = await fetchWithAuth(targetGasUrl, {
           method: 'POST',
           body: JSON.stringify({ command: 'getBulkRegisterData', ssUrl: ssUrl })
         });
@@ -3725,7 +3698,7 @@ async function syncPatrolData() {
       let targetGasUrl = AppStorage.get("sh_tensite_url", "") || AppStorage.get("sh_sniper_url", "");
       
       if (ssUrl && targetGasUrl) {
-        fetch(targetGasUrl, {
+        fetchWithAuth(targetGasUrl, {
           method: 'POST',
           body: JSON.stringify({ 
             command: 'updateBulkDesc', 
@@ -3763,7 +3736,7 @@ async function syncPatrolData() {
       let targetGasUrl = AppStorage.get("sh_tensite_url", "") || AppStorage.get("sh_sniper_url", "");
       
       try {
-        const res = await fetch(targetGasUrl, {
+        const res = await fetchWithAuth(targetGasUrl, {
           method: 'POST',
           body: JSON.stringify({ command: 'completeBulkRegister', ssUrl: ssUrl, skus: targetSkus })
         });
@@ -3813,7 +3786,7 @@ async function syncPatrolData() {
       countEl.innerText = "同期中...";
 
       try {
-        const res = await fetch(targetGasUrl, {
+        const res = await fetchWithAuth(targetGasUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({ command: 'getPurchaseList', ssUrl: researcherUrl })
@@ -3984,7 +3957,7 @@ async function syncPatrolData() {
       btn.disabled = true;
 
       try {
-        const res = await fetch(targetGasUrl, {
+        const res = await fetchWithAuth(targetGasUrl, {
           method: 'POST',
           body: JSON.stringify({ command: 'updatePurchaseItem', ssUrl: researcherUrl, id: id, purchaseDate: newDate })
         });
@@ -4017,7 +3990,7 @@ async function syncPatrolData() {
       btn.disabled = true;
 
       try {
-        const res = await fetch(targetGasUrl, {
+        const res = await fetchWithAuth(targetGasUrl, {
           method: 'POST',
           body: JSON.stringify({ command: 'deletePurchaseItem', ssUrl: researcherUrl, id: id })
         });
@@ -4047,7 +4020,7 @@ async function syncPatrolData() {
       document.getElementById('infoModal').style.display = 'flex';
       document.getElementById('info-suppliers').value = "読み込み中...";
       
-      fetch(targetGasUrl, {
+      fetchWithAuth(targetGasUrl, {
         method: 'POST',
         body: JSON.stringify({ command: 'getInfoSettings', ssUrl: ssUrl })
       })
@@ -4080,7 +4053,7 @@ async function syncPatrolData() {
       btn.innerHTML = "保存中...";
       btn.disabled = true;
 
-      fetch(targetGasUrl, {
+      fetchWithAuth(targetGasUrl, {
         method: 'POST',
         body: JSON.stringify({ 
           command: 'saveInfoSettings',
@@ -4133,7 +4106,7 @@ async function syncPatrolData() {
       }
 
       try {
-        const res = await fetch(targetGasUrl, {
+        const res = await fetchWithAuth(targetGasUrl, {
           method: 'POST',
           body: JSON.stringify({ command: 'startKeepaDirect', ssUrl: ssUrl, keepaKey: keepaKey, sellerId: sellerId })
         });
@@ -4165,7 +4138,7 @@ async function syncPatrolData() {
       tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:40px; color:#2b6cb0;">⌛ 鏡写しデータを生成中...</td></tr>';
       
       try {
-        const res = await fetch(targetGasUrl, {
+        const res = await fetchWithAuth(targetGasUrl, {
           method: 'POST',
           body: JSON.stringify({ command: 'getExpenseListData', ssUrl: ssUrl })
         });
@@ -4311,7 +4284,7 @@ async function syncPatrolData() {
       let targetGasUrl = AppStorage.get("sh_tensite_url", "") || AppStorage.get("sh_sniper_url", "");
 
       try {
-        const res = await fetch(targetGasUrl, {
+        const res = await fetchWithAuth(targetGasUrl, {
           method: 'POST',
           body: JSON.stringify({
             command: 'registerExpense',
@@ -4359,7 +4332,7 @@ async function syncPatrolData() {
       if (!ssUrl || !targetGasUrl) return alert("⚙️設定からManagerのURLとGAS URLを登録してな！");
 
       try {
-        const res = await fetch(targetGasUrl, {
+        const res = await fetchWithAuth(targetGasUrl, {
           method: 'POST',
           body: JSON.stringify({ command: 'deleteExpense', ssUrl: ssUrl, row: sheetRow })
         });
@@ -4452,7 +4425,7 @@ async function syncPatrolData() {
       document.getElementById('info-suppliers').value = "⏳ シートから最新設定を同期中...";
 
       try {
-        const res = await fetch(targetGasUrl, {
+        const res = await fetchWithAuth(targetGasUrl, {
           method: 'POST',
           body: JSON.stringify({ command: 'getInfoSettings', ssUrl: ssUrl })
         });
@@ -4518,7 +4491,7 @@ async function syncPatrolData() {
       }
 
       try {
-        const res = await fetch(targetGasUrl, {
+        const res = await fetchWithAuth(targetGasUrl, {
           method: 'POST',
           body: JSON.stringify({ 
             command: 'saveInfoSettings',
@@ -4570,7 +4543,7 @@ async function syncPatrolData() {
       let targetGasUrl = AppStorage.get("sh_tensite_url", "") || AppStorage.get("sh_sniper_url", "");
       if (!targetGasUrl) return;
       try {
-        const res = await fetch(targetGasUrl, { method: 'POST', body: JSON.stringify({ command: 'getSettings' }) });
+        const res = await fetchWithAuth(targetGasUrl, { method: 'POST', body: JSON.stringify({ command: 'getSettings' }) });
         const data = await res.json();
         if (data.success && data.settings) {
           document.getElementById('gas-setting-apikey').value = data.settings.apiKey || "";
@@ -4593,7 +4566,7 @@ async function syncPatrolData() {
       btn.innerHTML = "保存・認証中..."; btn.disabled = true;
       let targetGasUrl = AppStorage.get("sh_tensite_url", "") || AppStorage.get("sh_sniper_url", "");
       try {
-        const res = await fetch(targetGasUrl, {
+        const res = await fetchWithAuth(targetGasUrl, {
           method: 'POST',
           body: JSON.stringify({ command: 'saveSettings', settings: { apiKey: key, sellerId: sellerId, linkedSheetId: linkedSheetId, serialCode: serialCode } })
         });
@@ -4608,7 +4581,7 @@ async function syncPatrolData() {
       let targetGasUrl = AppStorage.get("sh_tensite_url", "") || AppStorage.get("sh_sniper_url", "");
       if (!targetGasUrl) return;
       try {
-        const res = await fetch(targetGasUrl, { method: 'POST', body: JSON.stringify({ command: 'getSavedTriggers' }) });
+        const res = await fetchWithAuth(targetGasUrl, { method: 'POST', body: JSON.stringify({ command: 'getSavedTriggers' }) });
         const data = await res.json();
         if (data.success && data.triggers) {
           ['research', 'sync'].forEach(key => {
@@ -4632,7 +4605,7 @@ async function syncPatrolData() {
         sync: { a: document.getElementById('gas-trigger-a-sync').checked, h: document.getElementById('gas-trigger-h-sync').value || "0" }
       };
       try {
-        const res = await fetch(targetGasUrl, { method: 'POST', body: JSON.stringify({ command: 'saveAllTriggers', triggers: triggerData }) });
+        const res = await fetchWithAuth(targetGasUrl, { method: 'POST', body: JSON.stringify({ command: 'saveAllTriggers', triggers: triggerData }) });
         const data = await res.json();
         if (data.success) alert("✅ 自動実行の予約設定を保存したで！");
         else alert("❌ 保存エラー: " + data.message);
@@ -4710,7 +4683,7 @@ async function syncPatrolData() {
         }
 
         try {
-          const res = await fetch(researcherGasUrl, {
+          const res = await fetchWithAuth(researcherGasUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({
@@ -4744,22 +4717,6 @@ async function syncPatrolData() {
       reader.readAsText(file);
     }
 
-    function openSheetLinksModal() {
-      document.getElementById('sheetLinksModal').style.display = 'flex';
-    }
-    function closeSheetLinksModal() {
-      document.getElementById('sheetLinksModal').style.display = 'none';
-    }
-    function openSheet(storageKey) {
-      const url = AppStorage.get(storageKey, "");
-      if (!url) {
-        alert("⚙️ まだ設定画面でこのシートのURLが登録されてへんで！");
-        closeSheetLinksModal();
-        openConfig();
-        return;
-      }
-      window.open(url, '_blank');
-    }
   </script>
 
   <div id="hazmatGuideModal" class="modal" onclick="closeHazmatGuide()">
@@ -4789,7 +4746,7 @@ async function syncPatrolData() {
           const currentToken = await getToken(messaging, { vapidKey: "BJMWJMJx2CGiDNuLq7xixOKeBlN8Hd3vNvbx4QmK7mf1R3ccUCXuP0o-ZlsRurw7MhpiwWLZuvu57twS5jypqlU", serviceWorkerRegistration: registration });
           if (currentToken) {
             AppStorage.set("sh_fcm_token", currentToken); const sniperUrl = AppStorage.get("sh_sniper_url", "");
-            if (sniperUrl) { fetch(sniperUrl, { method: 'POST', body: JSON.stringify({ command: 'saveToken', token: currentToken }) }); alert("✅ 通知設定完了！"); btn.innerText = "✅ 通知設定完了"; } 
+            if (sniperUrl) { fetchWithAuth(sniperUrl, { method: 'POST', body: JSON.stringify({ command: 'saveToken', token: currentToken }) }); alert("✅ 通知設定完了！"); btn.innerText = "✅ 通知設定完了"; } 
             else { alert("⚠️ S側 GAS URL を設定してな！"); btn.innerText = "🔔 通知許可する"; btn.disabled = false; }
           } else { alert("❌ トークン取得失敗"); btn.innerText = "🔔 通知許可する"; btn.disabled = false; }
         } else { alert("通知ブロック中。"); btn.innerText = "🔔 通知許可する"; btn.disabled = false; }
