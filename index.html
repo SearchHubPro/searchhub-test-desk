@@ -491,6 +491,85 @@
     </div>
   </div>
 
+  <div id="view-manager-settings" class="view">
+    <div class="content">
+      <div style="display:flex; gap:8px; margin-bottom:16px;">
+        <button id="tab-btn-info" onclick="switchSettingTab('info')" style="flex:1; padding:10px; border:none; border-radius:8px; background:#1a365d; color:white; font-weight:bold; font-size:12px; cursor:pointer;">📋 情報設定</button>
+        <button id="tab-btn-system" onclick="switchSettingTab('system')" style="flex:1; padding:10px; border:none; border-radius:8px; background:#edf2f7; color:#4a5568; font-weight:bold; font-size:12px; cursor:pointer;">🔑 API設定</button>
+        <button id="tab-btn-trigger" onclick="switchSettingTab('trigger')" style="flex:1; padding:10px; border:none; border-radius:8px; background:#edf2f7; color:#4a5568; font-weight:bold; font-size:12px; cursor:pointer;">⏰ 実行予約</button>
+      </div>
+
+      <div id="panel-setting-info" class="setting-panel" style="display:block;">
+        <div style="background:#f7fafc; border-radius:12px; padding:16px; margin-bottom:16px;">
+          <label style="font-size:12px; font-weight:bold; color:#4a5568; display:block; margin-bottom:6px;">仕入先リスト（1行に1つ）</label>
+          <textarea id="info-suppliers" rows="5" style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #cbd5e0; border-radius:6px; font-size:13px;" placeholder="例:&#10;ハードオフ〇〇店&#10;ブックオフ〇〇店"></textarea>
+        </div>
+
+        <div style="background:#f7fafc; border-radius:12px; padding:16px; margin-bottom:16px;">
+          <div style="font-size:13px; font-weight:bold; color:#1a365d; margin-bottom:10px;">コンディション別 商品説明テンプレ</div>
+          <label style="font-size:11px; font-weight:bold; color:#4a5568;">ほぼ新品</label>
+          <textarea id="info-cond-c" rows="2" style="width:100%; box-sizing:border-box; padding:6px; margin-bottom:8px; border:1px solid #cbd5e0; border-radius:6px; font-size:12px;"></textarea>
+          <label style="font-size:11px; font-weight:bold; color:#4a5568;">非常に良い</label>
+          <textarea id="info-cond-d" rows="2" style="width:100%; box-sizing:border-box; padding:6px; margin-bottom:8px; border:1px solid #cbd5e0; border-radius:6px; font-size:12px;"></textarea>
+          <label style="font-size:11px; font-weight:bold; color:#4a5568;">良い</label>
+          <textarea id="info-cond-e" rows="2" style="width:100%; box-sizing:border-box; padding:6px; margin-bottom:8px; border:1px solid #cbd5e0; border-radius:6px; font-size:12px;"></textarea>
+          <label style="font-size:11px; font-weight:bold; color:#4a5568;">可</label>
+          <textarea id="info-cond-f" rows="2" style="width:100%; box-sizing:border-box; padding:6px; border:1px solid #cbd5e0; border-radius:6px; font-size:12px;"></textarea>
+        </div>
+
+        <div style="background:#f7fafc; border-radius:12px; padding:16px; margin-bottom:16px;">
+          <div style="font-size:13px; font-weight:bold; color:#1a365d; margin-bottom:10px;">💳 カード支払い設定（最大5枠）</div>
+          <div id="info-cards-container" style="display:flex; flex-direction:column; gap:12px;"></div>
+        </div>
+
+        <button onclick="saveInfoSettingsView()" style="width:100%; padding:14px; border:none; border-radius:8px; background:#1a365d; color:#fff; font-weight:bold; font-size:14px; cursor:pointer;">この内容で保存</button>
+      </div>
+
+      <div id="panel-setting-system" class="setting-panel" style="display:none;">
+        <div style="background:#f7fafc; border-radius:12px; padding:16px; margin-bottom:16px;">
+          <label style="font-size:12px; font-weight:bold; color:#4a5568; display:block; margin-bottom:6px;">🔑 Keepa APIキー</label>
+          <input type="text" id="gas-setting-apikey" style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #cbd5e0; border-radius:6px; font-size:13px;" placeholder="あなたのKeepaAPIキー">
+
+          <label style="font-size:12px; font-weight:bold; color:#4a5568; display:block; margin:12px 0 6px;">🛒 AmazonセラーID</label>
+          <input type="text" id="gas-setting-sellerid" style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #cbd5e0; border-radius:6px; font-size:13px;" placeholder="例: A1234567890XYZ">
+
+          <div style="display:none;">
+            <input type="text" id="gas-setting-sheeturl" value="supabase">
+            <input type="text" id="gas-setting-serial" value="supabase">
+          </div>
+        </div>
+        <button id="btn-save-gas-settings" onclick="saveGasSettings()" style="width:100%; padding:14px; border:none; border-radius:8px; background:#1a365d; color:#fff; font-weight:bold; font-size:14px; cursor:pointer;">保存する</button>
+      </div>
+
+      <div id="panel-setting-trigger" class="setting-panel" style="display:none;">
+        <div style="background:#f7fafc; border-radius:12px; padding:16px; margin-bottom:16px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px dashed #e2e8f0;">
+            <div style="font-weight:bold; font-size:13px;">🔍 価格改定を自動実行</div>
+            <div style="display:flex; align-items:center; gap:12px;">
+              <input type="number" id="gas-trigger-h-research" min="0" max="23" style="width:50px; padding:6px; text-align:center; border:1px solid #cbd5e0; border-radius:6px;">時
+              <label style="display:flex; align-items:center; gap:4px;">
+                <input type="checkbox" id="gas-trigger-a-research" onchange="toggleTriggerTextUI('research')">
+                <span id="text-trigger-research" style="font-size:11px; color:#a0aec0;">停止中</span>
+              </label>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 0;">
+            <div style="font-weight:bold; font-size:13px;">📊 仕入れ・販売同期</div>
+            <div style="display:flex; align-items:center; gap:12px;">
+              <input type="number" id="gas-trigger-h-sync" min="0" max="23" style="width:50px; padding:6px; text-align:center; border:1px solid #cbd5e0; border-radius:6px;">時
+              <label style="display:flex; align-items:center; gap:4px;">
+                <input type="checkbox" id="gas-trigger-a-sync" onchange="toggleTriggerTextUI('sync')">
+                <span id="text-trigger-sync" style="font-size:11px; color:#a0aec0;">停止中</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <button id="btn-save-gas-triggers" onclick="saveGasTriggers()" style="width:100%; padding:14px; border:none; border-radius:8px; background:#1a365d; color:#fff; font-weight:bold; font-size:14px; cursor:pointer;">予約を保存する</button>
+      </div>
+    </div>
+  </div>
+
+
   <div id="view-ledger" class="view">
     <div class="content">
       
@@ -4145,10 +4224,7 @@ async function syncPatrolData() {
         const json = await res.json();
         
         if (json.success && json.data) {
-          globalExpenseData = json.data.map((row, index) => {
-            row.push(index + 2);
-            return row;
-          });
+          globalExpenseData = json.data; // 🌟 Supabase版:各行の末尾に既にID(UUID)が入っている
 
           const monthSet = new Set();
           globalExpenseData.forEach(row => {
@@ -4212,7 +4288,7 @@ async function syncPatrolData() {
 
         let deleteBtn = "";
         if (!source.includes("Amazon自動")) {
-          deleteBtn = `<button onclick="deleteExpenseItem(${sheetRow})" style="background:#e53e3e; color:white; border:none; padding:6px 10px; border-radius:6px; font-weight:bold; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,0.1);"><i class="fas fa-trash-alt"></i></button>`;
+          deleteBtn = `<button onclick="deleteExpenseItem('${sheetRow}')" style="background:#e53e3e; color:white; border:none; padding:6px 10px; border-radius:6px; font-weight:bold; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,0.1);"><i class="fas fa-trash-alt"></i></button>`;
         }
         
         html += `<tr style="border-bottom: 1px solid #f1f5f9; background:#fff;">
