@@ -4950,7 +4950,13 @@ async function syncPatrolData() {
                 marketTotal += rj2.processed;
               }
 
-              alert(`✅ 即時解析が完了しました！\nKeepa: ${keepaTotal}件 / ヤフオク確認: ${marketTotal}件\nリサーチリストを確認してください。`);
+              dropLabel.innerHTML = `<i class="fas fa-spinner fa-spin" style="margin-right: 6px; color:#a855f7;"></i> セラー抽出中...`;
+              let sellerExtracted = 0, sellerNewAsins = 0;
+              const r3 = await fetchWithAuth(researchJobUrl + '/seller', { method: 'POST' });
+              const rj3 = await r3.json();
+              if (rj3.success) { sellerExtracted = rj3.extracted || 0; sellerNewAsins = rj3.newAsinsFound || 0; }
+
+              alert(`✅ 即時解析が完了しました！\nKeepa: ${keepaTotal}件 / ヤフオク確認: ${marketTotal}件 / セラー抽出: ${sellerExtracted}件(新規ASIN${sellerNewAsins}件)\nリサーチリストを確認してください。`);
             } catch (e2) {
               alert('⚠️ ASIN登録は成功しましたが、即時解析でエラーが出ました。予約時刻または手動実行で解析されます。');
             }
