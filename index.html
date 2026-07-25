@@ -3086,18 +3086,18 @@ async function syncPatrolData() {
           resDiv.innerHTML = html;
         }
 
-        // 3️⃣ チェックしたやつ（いらんやつ）をリストから消去！
+        // 3️⃣ チェックした商品をリストから削除
         async function removeCheckedItems() {
-          const asinsToDelete = [];
+          const idsToDelete = [];
           
           globalResearcherData.forEach((item, index) => {
             const checkbox = document.getElementById(`check_${index}`);
             if (checkbox && checkbox.checked) {
-              asinsToDelete.push(item.asin); // 💡 元のASIN収集に戻す
+              idsToDelete.push(item.id); // 🌟 ASINではなく行固有のIDを使う(同一ASIN重複事故防止)
             }
           });
           
-          if(asinsToDelete.length === 0) return alert("削除する項目にチェックを入れてください！");
+          if(idsToDelete.length === 0) return alert("削除する項目にチェックを入れてください！");
 
           const btn = document.querySelector('button[onclick="removeCheckedItems()"]');
           const originalText = btn.innerHTML;
@@ -3109,14 +3109,12 @@ async function syncPatrolData() {
           
           if (researcherUrl && targetGasUrl) {
             try {
-              // 🚨 1. CORSエラーの原因だった「headers」の指定を完全削除！
-              // 🚨 2. 送るデータも元の asinsToDelete に戻す！
               const res = await fetchWithAuth(targetGasUrl, { 
                 method: 'POST', 
                 body: JSON.stringify({ 
                   command: 'updateResearcherSheet', 
                   ssUrl: researcherUrl, 
-                  remainingItems: asinsToDelete 
+                  idsToDelete: idsToDelete 
                 }) 
               });
               
