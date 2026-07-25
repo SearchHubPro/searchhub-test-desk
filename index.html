@@ -5130,18 +5130,25 @@ async function syncPatrolData() {
         }
 
         container.innerHTML = list.map((s) => `
-          <div style="background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
-            <div>
-              <div style="font-family:monospace; font-weight:bold; color:#1a365d; font-size:13px;">${escapeHtml(s.seller_id)}</div>
-              <div style="font-size:11px; color:#718096; margin-top:2px;">評価数: ${s.review_count ?? "-"} / 在庫数: ${s.stock_count ?? "-"} / 発見元ASIN: ${escapeHtml(s.source_asin || "-")}</div>
+          <div style="background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:12px; margin-bottom:8px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+              <div style="min-width:0;">
+                <div style="font-weight:bold; color:#1a365d; font-size:14px; margin-bottom:2px;">${escapeHtml(s.seller_name || "(セラー名不明)")}</div>
+                <div style="font-family:monospace; color:#718096; font-size:11px; margin-bottom:4px;">${escapeHtml(s.seller_id)}</div>
+                <div style="font-size:11px; color:#718096;">評価数: <b>${s.review_count ?? "-"}</b> / 在庫数: <b>${s.stock_count ?? "-"}</b><br>発見元ASIN: ${escapeHtml(s.source_asin || "-")}</div>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:6px; flex-shrink:0;">
+                ${status === "pending" ? `
+                  <button onclick="approveSeller('${s.id}')" style="background:#38a169; color:#fff; border:none; padding:8px 12px; border-radius:6px; font-weight:bold; font-size:12px; cursor:pointer;">承認</button>
+                  <button onclick="rejectSeller('${s.id}')" style="background:#e53e3e; color:#fff; border:none; padding:8px 12px; border-radius:6px; font-weight:bold; font-size:12px; cursor:pointer;">却下</button>
+                ` : `
+                  <button onclick="deleteSellerCandidate('${s.id}')" style="background:#e53e3e; color:#fff; border:none; padding:8px 12px; border-radius:6px; font-weight:bold; font-size:12px; cursor:pointer;">削除</button>
+                `}
+              </div>
             </div>
-            <div style="display:flex; gap:6px;">
-              ${status === "pending" ? `
-                <button onclick="approveSeller('${s.id}')" style="background:#38a169; color:#fff; border:none; padding:8px 12px; border-radius:6px; font-weight:bold; font-size:12px; cursor:pointer;">承認</button>
-                <button onclick="rejectSeller('${s.id}')" style="background:#e53e3e; color:#fff; border:none; padding:8px 12px; border-radius:6px; font-weight:bold; font-size:12px; cursor:pointer;">却下</button>
-              ` : `
-                <button onclick="deleteSellerCandidate('${s.id}')" style="background:#e53e3e; color:#fff; border:none; padding:8px 12px; border-radius:6px; font-weight:bold; font-size:12px; cursor:pointer;">削除</button>
-              `}
+            <div style="display:flex; gap:6px; margin-top:8px; border-top:1px dashed #e2e8f0; padding-top:8px;">
+              <a href="https://www.amazon.co.jp/sp?seller=${encodeURIComponent(s.seller_id)}" target="_blank" style="flex:1; text-align:center; background:#f7941d; color:white; text-decoration:none; padding:6px 0; border-radius:4px; font-size:11px; font-weight:bold;"><i class="fab fa-amazon"></i> 出品ページ</a>
+              <a href="https://keepa.com/#!seller/5-${encodeURIComponent(s.seller_id)}" target="_blank" style="flex:1; text-align:center; background:#55a676; color:white; text-decoration:none; padding:6px 0; border-radius:4px; font-size:11px; font-weight:bold;"><i class="fas fa-chart-line"></i> Keepaで見る</a>
             </div>
           </div>`).join("");
       } catch (e) {
