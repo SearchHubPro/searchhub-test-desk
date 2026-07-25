@@ -1994,10 +1994,11 @@ async function syncPatrolData() {
         function closeConfig() { document.getElementById("configModal").style.display = "none"; }
         
         function saveConfig() {
-          // 🌟 Supabase移行:スプレッドシートURLは使わなくなったが、
-          // 既存コード内の「未入力チェック」を通すため裏で固定値をセットしておく
+          // 🌟 Supabase移行:スプレッドシートURL欄は削除したが、既存コード内の
+          // 「未入力チェック」を通すため、裏で実際のマネージャーAPI URLを流用してセットしておく
+          const mgrUrl = document.getElementById("cfgSniperUrl").value.trim() || document.getElementById("cfg10SiteUrl").value.trim() || "supabase";
           ["sh_ssurl","sh_researcher_url","sh_researcher_gas_url","sh_watcher_sheet_url","sh_sniper_sheet_url","sh_yahoo_sheet_url"].forEach(k => {
-            if (!AppStorage.get(k, "")) AppStorage.set(k, "supabase");
+            AppStorage.set(k, mgrUrl);
           });
           AppStorage.set("sh_supabase_key", document.getElementById("cfgSupabaseKey").value.trim());
           AppStorage.set("sh_keepa", document.getElementById("cfgKeepa").value.trim()); 
