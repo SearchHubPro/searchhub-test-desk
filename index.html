@@ -1875,9 +1875,8 @@
 
         const options = { 
           method: 'POST', 
-          mode: 'no-cors', 
-          // 🚨 keepalive は悪さするので完全に削除！
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          // 🌟 Supabase移行:mode:no-cors だとAuthorizationヘッダーが送れないため削除
+          headers: { 'Content-Type': 'application/json' },
           body: payload 
         };
 
