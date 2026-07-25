@@ -3097,7 +3097,7 @@ async function syncPatrolData() {
             }
           });
           
-          if(asinsToDelete.length === 0) return alert("削除する項目にチェックを入れてな！");
+          if(asinsToDelete.length === 0) return alert("削除する項目にチェックを入れてください！");
 
           const btn = document.querySelector('button[onclick="removeCheckedItems()"]');
           const originalText = btn.innerHTML;
@@ -3159,7 +3159,7 @@ async function syncPatrolData() {
             alert(`上から ${asinCopyIndex + 1}件目 ～ ${asinCopyIndex + targetItems.length}件目 のASINをコピーしました！\n別アプリで確認してください！`);
             asinCopyIndex += 20; // 次のスタート位置を更新
             
-            // 🌟 自動でセラセンを開く処理を削除したで！
+            // 🌟 自動でセラセンを開く処理を削除しました
           });
         }
 
@@ -3591,7 +3591,7 @@ async function syncPatrolData() {
         });
         const json = await res.json();
         if (json.success) {
-          alert("✅ 再出品データ（納品待ち）を帳簿の末尾に追加したで！");
+          alert("✅ 再出品データ（納品待ち）を帳簿の末尾に追加しました！");
           loadLedgerData();
         } else {
           alert("❌ 再出品失敗: " + json.message);
@@ -3934,7 +3934,7 @@ async function syncPatrolData() {
         return alert("登録対象の商品がありません！");
       }
       
-      if(!confirm(`画面に残っている ${targetSkus.length} 件を「出品中」に変更するで！ええか？\n（除外した商品は納品待ちのまま残ります）`)) return;
+      if(!confirm(`画面に残っている ${targetSkus.length} 件を「出品中」に変更します。よろしいですか？\n（除外した商品は納品待ちのまま残ります）`)) return;
       
       const btn = document.getElementById('bulkCompleteBtn');
       const originalText = btn.innerHTML;
@@ -3951,7 +3951,7 @@ async function syncPatrolData() {
         });
         const json = await res.json();
         if(json.success) {
-          alert("✅ 選択した商品を「出品中」に変更したで！");
+          alert("✅ 選択した商品を「出品中」に変更しました！");
           loadBulkRegisterData();
         } else {
           alert("❌ エラー: " + json.message);
@@ -4158,7 +4158,7 @@ async function syncPatrolData() {
       const researcherUrl = AppStorage.get("sh_researcher_url", "");
       let targetGasUrl = AppStorage.get("sh_tensite_url", "") || AppStorage.get("sh_sniper_url", "");
       
-      if (!researcherUrl || !targetGasUrl) return alert("⚙️URL設定が足りんで！");
+      if (!researcherUrl || !targetGasUrl) return alert("⚙️URL設定が不足しています！");
 
       const btn = document.querySelector('button[onclick="savePurchaseEdit()"]');
       const originalText = btn.innerHTML;
@@ -4191,7 +4191,7 @@ async function syncPatrolData() {
       const researcherUrl = AppStorage.get("sh_researcher_url", "");
       let targetGasUrl = AppStorage.get("sh_tensite_url", "") || AppStorage.get("sh_sniper_url", "");
 
-      if (!researcherUrl || !targetGasUrl) return alert("⚙️URL設定が足りんで！");
+      if (!researcherUrl || !targetGasUrl) return alert("⚙️URL設定が不足しています！");
 
       const btn = document.querySelector('button[onclick="deletePurchaseItem()"]');
       const originalText = btn.innerHTML;
@@ -4470,7 +4470,7 @@ async function syncPatrolData() {
     async function submitExpense() {
       const month = document.getElementById('expMonth').value.trim();
       const amount = document.getElementById('expAmount').value.trim();
-      if (!month || !amount) return alert("発生月と金額は絶対入れてな！");
+      if (!month || !amount) return alert("発生月と金額は必ず入力してください！");
 
       const selectVal = document.getElementById('expTypeSelect').value;
       let type = selectVal;
@@ -4712,7 +4712,7 @@ async function syncPatrolData() {
         });
         const data = await res.json();
         if (data.success) {
-          alert("🎯 情報sheetの設定を100%全同期・更新したで！！");
+          alert("🎯 情報sheetの設定を100%全同期・更新しました！！");
           openView('view-manager-menu');
         } else {
           alert("保存エラーや: " + data.message);
@@ -4776,9 +4776,9 @@ async function syncPatrolData() {
           body: JSON.stringify({ command: 'saveSettings', settings: { apiKey: key, sellerId: sellerId, linkedSheetId: linkedSheetId, serialCode: serialCode } })
         });
         const data = await res.json();
-        if (data.success) alert("✅ 設定とシリアルコードをGASへ保存したで！");
+        if (data.success) alert("✅ 設定とシリアルコードを保存しました！");
         else alert("❌ 認証エラー:\n" + data.message);
-      } catch (err) { alert("通信エラーや"); } 
+      } catch (err) { alert("通信エラーです"); } 
       finally { btn.innerHTML = originalText; btn.disabled = false; }
     };
 
@@ -4812,9 +4812,9 @@ async function syncPatrolData() {
       try {
         const res = await fetchWithAuth(targetGasUrl, { method: 'POST', body: JSON.stringify({ command: 'saveAllTriggers', triggers: triggerData }) });
         const data = await res.json();
-        if (data.success) alert("✅ 自動実行の予約設定を保存したで！");
+        if (data.success) alert("✅ 自動実行の予約設定を保存しました！");
         else alert("❌ 保存エラー: " + data.message);
-      } catch (err) { alert("通信エラーや"); } 
+      } catch (err) { alert("通信エラーです"); } 
       finally { btn.innerHTML = originalText; btn.disabled = false; }
     };
 
@@ -4843,7 +4843,7 @@ async function syncPatrolData() {
 
     function processKeepaCSV(file) {
       if (!file.name.toLowerCase().endsWith('.csv')) {
-        alert("⚠️ CSVファイルを入れてや！");
+        alert("⚠️ CSVファイルを選択してください！");
         return;
       }
 
@@ -4866,12 +4866,12 @@ async function syncPatrolData() {
         });
 
         if (asins.length === 0) {
-          alert("⚠️ 有効なASINが見つからんかったで！");
+          alert("⚠️ 有効なASINが見つかりませんでした！");
           dropLabel.innerHTML = originalText;
           return;
         }
 
-        if(!confirm(`📦 ${asins.length}件のASINを抽出したで！\nASIN検索sheetにセットして、自動リサーチを開始してもええか？`)) {
+        if(!confirm(`📦 ${asins.length}件のASINを抽出しました！\n自動リサーチを開始しますか？`)) {
           dropLabel.innerHTML = originalText;
           return;
         }
