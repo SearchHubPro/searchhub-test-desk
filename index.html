@@ -488,7 +488,7 @@
         
         <button class="dash-btn" onclick="openView('view-purchase-list')"><i class="fas fa-shopping-cart" style="color:#dd6b20;"></i>仕入れリスト</button>
 
-        <button class="dash-btn" onclick="openView('view-seller-pending'); loadSellerCandidates('pending');"><i class="fas fa-hourglass-half" style="color:#d69e2e;"></i>セラー1時保管所</button>
+        <button class="dash-btn" onclick="openView('view-seller-pending'); loadSellerCandidates('pending');"><i class="fas fa-hourglass-half" style="color:#d69e2e;"></i>セラー一時保管所</button>
 
         <button class="dash-btn" onclick="openView('view-seller-approved'); loadSellerCandidates('approved');"><i class="fas fa-check-circle" style="color:#38a169;"></i>セラーリスト</button>
 
@@ -529,6 +529,18 @@
           <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;">💰 目標利益率 (%)</label>
           <input type="number" id="rs-profitMargin" style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #cbd5e0; border-radius:6px; font-size:13px; margin-bottom:12px;">
 
+          <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;">🌐 WatcherのAB選択</label>
+          <select id="rs-watcherMode" style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #cbd5e0; border-radius:6px; font-size:13px; margin-bottom:12px;">
+            <option value="A">【A】90日平均</option>
+            <option value="B">【B】最安値選別</option>
+          </select>
+
+          <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;">🎯 SniperのAB選択</label>
+          <select id="rs-sniperMode" style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #cbd5e0; border-radius:6px; font-size:13px; margin-bottom:12px;">
+            <option value="A">【A】90日平均</option>
+            <option value="B">【B】最安値選別</option>
+          </select>
+
           <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;">🚫 除外ワード(URL末尾用)</label>
           <textarea id="rs-excludeWords" rows="2" style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #cbd5e0; border-radius:6px; font-size:12px; margin-bottom:12px;"></textarea>
 
@@ -539,17 +551,26 @@
           <input type="number" id="rs-maxUrls" style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #cbd5e0; border-radius:6px; font-size:13px; margin-bottom:12px;">
 
           <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;">✅ ヤフオク合格ライン(件数以上)</label>
-          <input type="number" id="rs-minRecordCount" style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #cbd5e0; border-radius:6px; font-size:13px;">
+          <input type="number" id="rs-minRecordCount" style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #cbd5e0; border-radius:6px; font-size:13px; margin-bottom:16px;">
+
+          <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:6px;">🎯 ターゲットカテゴリー(チェックしたものを抽出)</label>
+          <div id="rs-category-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:11px;"></div>
         </div>
       </div>
 
       <div id="rpanel-batch" class="rsetting-panel" style="display:none;">
         <div style="background:#f7fafc; border-radius:12px; padding:16px;">
-          <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;">一度に取得する件数</label>
+          <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;">一度に取得する件数 (BATCH_SIZE)</label>
           <input type="number" id="rs-batchSize" style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #cbd5e0; border-radius:6px; font-size:13px; margin-bottom:12px;">
 
-          <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;">待機時間(秒)</label>
-          <input type="number" id="rs-batchCooldown" style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #cbd5e0; border-radius:6px; font-size:13px;">
+          <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;">待機時間/秒 (BATCH_COOLDOWN)</label>
+          <input type="number" id="rs-batchCooldown" style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #cbd5e0; border-radius:6px; font-size:13px; margin-bottom:16px;">
+
+          <div style="background:#e6f0fa; border-radius:8px; padding:12px;">
+            <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px; color:#1a365d;">✅ 自動リサーチ専用設定</label>
+            <label style="font-size:11px; color:#4a5568; display:block; margin-bottom:4px;">最大実行時間/分 (MAX_EXECUTION)</label>
+            <input type="number" id="rs-maxExecution" style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #cbd5e0; border-radius:6px; font-size:13px;">
+          </div>
         </div>
       </div>
 
@@ -595,7 +616,7 @@
           </div>
           <label style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:bold;">
             <input type="checkbox" id="rs-sellerAutoApprove">
-            条件に合うセラーを1時保管所を通さず自動でセラーリストに入れる
+            条件に合うセラーを一時保管所を通さず自動でセラーリストに入れる
           </label>
         </div>
       </div>
@@ -4872,7 +4893,17 @@ async function syncPatrolData() {
           }
 
           if (json.success) {
-            alert(`✅ ${asins.length}件のASINをセットして、自動リサーチをスタートしたで！！\n（裏側で現場監督が走り出しました！）`);
+            alert(`✅ ${asins.length}件のASINをセットしました！\n即時解析を開始します（少し時間がかかります）...`);
+
+            // 🌟 手動ドロップ時は待たずに即座にKeepa解析を開始する
+            try {
+              const researchJobUrl = researcherGasUrl.replace(/\/manager\/?$/, '/research-job');
+              await fetchWithAuth(researchJobUrl + '/keepa', { method: 'POST' });
+              alert('✅ 即時解析が完了しました！リサーチリストを確認してください。');
+            } catch (e2) {
+              alert('⚠️ ASIN登録は成功しましたが、即時解析でエラーが出ました。予約時刻または手動実行で解析されます。');
+            }
+
             if (typeof loadResearcherData === 'function') loadResearcherData();
           } else {
             alert(`❌ 自動リサーチ開始エラー:\n${json.message}`);
@@ -5018,7 +5049,7 @@ async function syncPatrolData() {
     }
 
     // =========================================================
-    // セラー1時保管所 / セラーリスト
+    // セラー一時保管所 / セラーリスト
     // =========================================================
     async function loadSellerCandidates(status) {
       const containerId = status === "approved" ? "seller-approved-list" : "seller-pending-list";
@@ -5036,7 +5067,7 @@ async function syncPatrolData() {
 
         const list = result.data || [];
         if (list.length === 0) {
-          container.innerHTML = `<div style="text-align:center; color:#a0aec0; padding:20px;">${status === "approved" ? "承認済みのセラーはまだいません" : "1時保管所は空です"}</div>`;
+          container.innerHTML = `<div style="text-align:center; color:#a0aec0; padding:20px;">${status === "approved" ? "承認済みのセラーはまだいません" : "一時保管所は空です"}</div>`;
           return;
         }
 
@@ -5091,6 +5122,45 @@ async function syncPatrolData() {
       loadResearcherSettings();
     }
 
+    const RS_MASTER_CATEGORIES = [
+      {name: "DIY・工具・ガーデン", id: 2017304051},
+      {name: "DVD", id: 561958},
+      {name: "PCソフト", id: 637392},
+      {name: "おもちゃ", id: 13299551},
+      {name: "ゲーム", id: 637300},
+      {name: "スポーツ＆アウトドア", id: 14304281},
+      {name: "ドラッグストア", id: 16166141},
+      {name: "パソコン・周辺機器", id: 2127209051},
+      {name: "ビューティー", id: 52374051},
+      {name: "ペット用品", id: 2127212051},
+      {name: "ベビー＆マタニティ", id: 344845011},
+      {name: "ホーム＆キッチン", id: 3828871},
+      {name: "ホビー", id: 2277721051},
+      {name: "家電＆カメラ", id: 3210981},
+      {name: "楽器・音響機器", id: 2123629051},
+      {name: "産業・研究開発用品", id: 3385781051},
+      {name: "車＆バイク", id: 2017305051},
+      {name: "食品・飲料・お酒", id: 57239051},
+      {name: "大型家電", id: 2277724051},
+      {name: "文房具・オフィス用品", id: 86539051},
+      {name: "本", id: 465392},
+      {name: "ミュージック", id: 561956},
+      {name: "服＆ファッション小物", id: 352484011},
+      {name: "シューズ＆バッグ", id: 2016926051},
+      {name: "ジュエリー・時計", id: 85895051}
+    ];
+
+    function renderRsCategoryGrid(selectedIds) {
+      selectedIds = selectedIds || [];
+      const grid = document.getElementById("rs-category-grid");
+      if (!grid) return;
+      grid.innerHTML = RS_MASTER_CATEGORIES.map((cat) => `
+        <label style="display:flex; align-items:center; gap:4px;">
+          <input type="checkbox" class="rs-category" value="${cat.id}" ${selectedIds.includes(cat.id) ? "checked" : ""}>
+          ${cat.name}
+        </label>`).join("");
+    }
+
     async function loadResearcherSettings() {
       const apiKey = AppStorage.get("sh_supabase_key", "");
       const settingsUrl = getSettingsApiUrl();
@@ -5104,13 +5174,17 @@ async function syncPatrolData() {
 
         document.getElementById("rs-keepaApiKey").value = d.keepa_api_key || "";
         document.getElementById("rs-profitMargin").value = d.profit_margin ?? 20;
+        document.getElementById("rs-watcherMode").value = d.watcher_mode || "A";
+        document.getElementById("rs-sniperMode").value = d.sniper_mode || "A";
         document.getElementById("rs-excludeWords").value = d.exclude_words || "";
         document.getElementById("rs-excludeBrands").value = d.exclude_brands || "";
         document.getElementById("rs-maxUrls").value = d.max_urls_per_run ?? 3;
         document.getElementById("rs-minRecordCount").value = d.min_record_count ?? 3;
+        renderRsCategoryGrid(d.target_category_ids || []);
 
         document.getElementById("rs-batchSize").value = d.batch_size ?? 20;
         document.getElementById("rs-batchCooldown").value = d.batch_cooldown_sec ?? 10;
+        document.getElementById("rs-maxExecution").value = d.max_execution_min ?? 3;
 
         document.getElementById("rs-priceMin").value = d.price_min ?? "";
         document.getElementById("rs-priceMax").value = d.price_max ?? "";
@@ -5134,16 +5208,21 @@ async function syncPatrolData() {
       if (!apiKey || !settingsUrl) { alert("先に⚙️設定でSupabase APIキーとマネージャーAPI URLを入力してください！"); return; }
 
       const keepRanks = Array.from(document.querySelectorAll(".rs-keepRank:checked")).map(cb => cb.value);
+      const categoryIds = Array.from(document.querySelectorAll(".rs-category:checked")).map(cb => parseInt(cb.value, 10));
 
       const payload = {
         keepa_api_key: document.getElementById("rs-keepaApiKey").value.trim(),
         profit_margin: parseFloat(document.getElementById("rs-profitMargin").value) || 20,
+        watcher_mode: document.getElementById("rs-watcherMode").value,
+        sniper_mode: document.getElementById("rs-sniperMode").value,
         exclude_words: document.getElementById("rs-excludeWords").value,
         exclude_brands: document.getElementById("rs-excludeBrands").value,
         max_urls_per_run: parseInt(document.getElementById("rs-maxUrls").value, 10) || 3,
         min_record_count: parseInt(document.getElementById("rs-minRecordCount").value, 10) || 3,
+        target_category_ids: categoryIds,
         batch_size: parseInt(document.getElementById("rs-batchSize").value, 10) || 20,
         batch_cooldown_sec: parseInt(document.getElementById("rs-batchCooldown").value, 10) || 10,
+        max_execution_min: parseInt(document.getElementById("rs-maxExecution").value, 10) || 3,
         price_min: parseFloat(document.getElementById("rs-priceMin").value) || null,
         price_max: parseFloat(document.getElementById("rs-priceMax").value) || null,
         sr_price_min: parseFloat(document.getElementById("rs-srPriceMin").value) || null,
