@@ -432,9 +432,6 @@
     </script>
     
     <div class="dashboard-grid">
-      <button class="dash-btn" onclick="openAllSchedulesModal()">
-        <i class="fas fa-clock" style="color:#805ad5;"></i>実行予約（全機能）
-      </button>
       <button class="dash-btn" onclick="openView('view-amazon')">
         <i class="fab fa-amazon" style="color:#ff9900;"></i>Amazon リサーチ
         <span style="font-size:10px; color:#718096; font-weight:normal; margin-top:4px;">単体深掘り・利益シミュレーション</span>
@@ -458,6 +455,10 @@
       <button class="dash-btn" onclick="openView('view-sniper')">
         <i class="fas fa-crosshairs" style="color:#e53e3e;"></i>SearchHub Sniper<span class="dash-dot" id="dash-dot-sniper"></span>
         <span style="font-size:10px; color:#718096; font-weight:normal; margin-top:4px;">利益商品自動狙撃・即時購入ログ</span>
+      </button>
+
+      <button class="dash-btn" onclick="openAllSchedulesModal()">
+        <i class="fas fa-clock" style="color:#805ad5;"></i>実行予約
       </button>
 
     </div>
@@ -496,7 +497,6 @@
       <div style="display:flex; gap:8px; margin-bottom:16px;">
         <button id="tab-btn-info" onclick="switchSettingTab('info')" style="flex:1; padding:10px; border:none; border-radius:8px; background:#1a365d; color:white; font-weight:bold; font-size:12px; cursor:pointer;">📋 情報設定</button>
         <button id="tab-btn-system" onclick="switchSettingTab('system')" style="flex:1; padding:10px; border:none; border-radius:8px; background:#edf2f7; color:#4a5568; font-weight:bold; font-size:12px; cursor:pointer;">🔑 API設定</button>
-        <button id="tab-btn-trigger" onclick="switchSettingTab('trigger')" style="flex:1; padding:10px; border:none; border-radius:8px; background:#edf2f7; color:#4a5568; font-weight:bold; font-size:12px; cursor:pointer;">⏰ 実行予約</button>
       </div>
 
       <div id="panel-setting-info" class="setting-panel" style="display:block;">
@@ -541,31 +541,6 @@
         <button id="btn-save-gas-settings" onclick="saveGasSettings()" style="width:100%; padding:14px; border:none; border-radius:8px; background:#1a365d; color:#fff; font-weight:bold; font-size:14px; cursor:pointer;">保存する</button>
       </div>
 
-      <div id="panel-setting-trigger" class="setting-panel" style="display:none;">
-        <div style="background:#f7fafc; border-radius:12px; padding:16px; margin-bottom:16px;">
-          <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px dashed #e2e8f0;">
-            <div style="font-weight:bold; font-size:13px;">🔍 価格改定を自動実行</div>
-            <div style="display:flex; align-items:center; gap:12px;">
-              <input type="number" id="gas-trigger-h-research" min="0" max="23" style="width:50px; padding:6px; text-align:center; border:1px solid #cbd5e0; border-radius:6px;">時
-              <label style="display:flex; align-items:center; gap:4px;">
-                <input type="checkbox" id="gas-trigger-a-research" onchange="toggleTriggerTextUI('research')">
-                <span id="text-trigger-research" style="font-size:11px; color:#a0aec0;">停止中</span>
-              </label>
-            </div>
-          </div>
-          <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 0;">
-            <div style="font-weight:bold; font-size:13px;">📊 仕入れ・販売同期</div>
-            <div style="display:flex; align-items:center; gap:12px;">
-              <input type="number" id="gas-trigger-h-sync" min="0" max="23" style="width:50px; padding:6px; text-align:center; border:1px solid #cbd5e0; border-radius:6px;">時
-              <label style="display:flex; align-items:center; gap:4px;">
-                <input type="checkbox" id="gas-trigger-a-sync" onchange="toggleTriggerTextUI('sync')">
-                <span id="text-trigger-sync" style="font-size:11px; color:#a0aec0;">停止中</span>
-              </label>
-            </div>
-          </div>
-        </div>
-        <button id="btn-save-gas-triggers" onclick="saveGasTriggers()" style="width:100%; padding:14px; border:none; border-radius:8px; background:#1a365d; color:#fff; font-weight:bold; font-size:14px; cursor:pointer;">予約を保存する</button>
-      </div>
     </div>
   </div>
 
@@ -4605,7 +4580,7 @@ async function syncPatrolData() {
 
     window.switchSettingTab = function(tabKey) {
       document.querySelectorAll('.setting-panel').forEach(p => p.style.display = 'none');
-      const tabs = { info: document.getElementById('tab-btn-info'), system: document.getElementById('tab-btn-system'), trigger: document.getElementById('tab-btn-trigger') };
+      const tabs = { info: document.getElementById('tab-btn-info'), system: document.getElementById('tab-btn-system') };
       Object.keys(tabs).forEach(k => { if(tabs[k]) { tabs[k].style.background = '#edf2f7'; tabs[k].style.color = '#4a5568'; } });
       const activePanel = document.getElementById(`panel-setting-${tabKey}`);
       if(activePanel) activePanel.style.display = 'block';
@@ -4613,7 +4588,6 @@ async function syncPatrolData() {
 
       if(tabKey === 'info') loadInfoSettingsView();
       if(tabKey === 'system') loadGasSettings();
-      if(tabKey === 'trigger') loadGasTriggers();
     };
 
     window.toggleTriggerTextUI = function(key) {
@@ -4846,11 +4820,20 @@ async function syncPatrolData() {
     function renderAllSchedulesList(savedMap) {
       savedMap = savedMap || {};
       const container = document.getElementById("allSchedulesList");
+      const groupHeaderBefore = {
+        "research-1": "SearchHub Researcher",
+        "watcher_patrol-1": "SearchHub Watcher",
+        "manager_price_revision-1": "SearchHub Manager",
+      };
       container.innerHTML = ALL_SCHEDULE_TASKS.map((t) => {
         const saved = savedMap[t.key] || {};
         const hour = saved.hour !== undefined ? saved.hour : t.defaultHour;
         const enabled = saved.enabled === true;
+        const headerHtml = groupHeaderBefore[t.key]
+          ? `<div style="font-size:11px; font-weight:bold; color:#805ad5; margin-top:14px; margin-bottom:4px; letter-spacing:0.5px;">${groupHeaderBefore[t.key]}</div>`
+          : "";
         return `
+          ${headerHtml}
           <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px dashed #e2e8f0;">
             <div style="font-size:12px; font-weight:bold; flex:1; padding-right:8px;">${t.label}</div>
             <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
