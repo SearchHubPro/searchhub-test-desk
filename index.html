@@ -432,6 +432,9 @@
     </script>
     
     <div class="dashboard-grid">
+      <button class="dash-btn" onclick="openAllSchedulesModal()">
+        <i class="fas fa-clock" style="color:#805ad5;"></i>実行予約（全機能）
+      </button>
       <button class="dash-btn" onclick="openView('view-amazon')">
         <i class="fab fa-amazon" style="color:#ff9900;"></i>Amazon リサーチ
         <span style="font-size:10px; color:#718096; font-weight:normal; margin-top:4px;">単体深掘り・利益シミュレーション</span>
@@ -4798,6 +4801,126 @@ async function syncPatrolData() {
       reader.readAsText(file);
     }
 
+  </script>
+
+  <div id="allSchedulesModal" class="modal">
+    <div class="modal-content" style="max-width: 440px;">
+      <h3>⏰ 実行予約（全機能）</h3>
+      <div id="allSchedulesList" style="max-height: 60vh; overflow-y: auto;"></div>
+      <div class="modal-actions">
+        <button style="background:#e2e8f0; color:#4a5568;" onclick="closeAllSchedulesModal()">閉じる</button>
+        <button style="background:#07A27B; color:white;" onclick="saveAllSchedulesModal()">保存する</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ALL_SCHEDULE_TASKS = [
+      { key: "research-1",        task_type: "research",               slot_no: 1, label: "🔍 自動リサーチ開始（Keepa取得＋ヤフオク巡回）", defaultHour: 6 },
+      { key: "seller-1",          task_type: "seller",                 slot_no: 1, label: "📦 セラーリスト挿入",                             defaultHour: 3 },
+      { key: "expiry-1",          task_type: "expiry",                 slot_no: 1, label: "🗑️ 期限切れチェック",                            defaultHour: 4 },
+      { key: "update-1",         task_type: "update",                 slot_no: 1, label: "🔄 在庫データ更新",                               defaultHour: 5 },
+      { key: "watcher_sync-1",    task_type: "watcher_sync",           slot_no: 1, label: "🌐 検索URL同期（ウォッチャー）",                   defaultHour: 3 },
+      { key: "sniper_sync-1",     task_type: "sniper_sync",            slot_no: 1, label: "🎯 検索URL同期（スナイパー）",                     defaultHour: 3 },
+      { key: "watcher_patrol-1",  task_type: "watcher_patrol",         slot_no: 1, label: "🚀 自動巡回（1回目）",                             defaultHour: 7 },
+      { key: "watcher_patrol-2",  task_type: "watcher_patrol",         slot_no: 2, label: "🚀 自動巡回（2回目）",                             defaultHour: 17 },
+      { key: "manager_price_revision-1", task_type: "manager_price_revision", slot_no: 1, label: "💰 価格改定を自動実行",                    defaultHour: 2 },
+      { key: "manager_sync-1",    task_type: "manager_sync",           slot_no: 1, label: "📊 仕入れ・販売同期",                             defaultHour: 4 },
+    ];
+
+    function getSettingsApiUrl() {
+      const mgrUrl = AppStorage.get("sh_sniper_url", "") || AppStorage.get("sh_tensite_url", "");
+      if (!mgrUrl) return "";
+      return mgrUrl.replace(/\/manager\/?$/, "/settings");
+    }
+
+    function openAllSchedulesModal() {
+      renderAllSchedulesList();
+      document.getElementById("allSchedulesModal").style.display = "flex";
+      loadAllSchedules();
+    }
+    function closeAllSchedulesModal() {
+      document.getElementById("allSchedulesModal").style.display = "none";
+    }
+
+    function renderAllSchedulesList(savedMap) {
+      savedMap = savedMap || {};
+      const container = document.getElementById("allSchedulesList");
+      container.innerHTML = ALL_SCHEDULE_TASKS.map((t) => {
+        const saved = savedMap[t.key] || {};
+        const hour = saved.hour !== undefined ? saved.hour : t.defaultHour;
+        const enabled = saved.enabled === true;
+        return `
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px dashed #e2e8f0;">
+            <div style="font-size:12px; font-weight:bold; flex:1; padding-right:8px;">${t.label}</div>
+            <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+              <input type="number" min="0" max="23" value="${hour}" data-key="${t.key}" class="allsched-hour"
+                     style="width:46px; padding:6px; border:1px solid #ccc; border-radius:6px; text-align:center;">
+              <span style="font-size:11px; color:#888;">時</span>
+              <label style="display:flex; align-items:center; gap:4px; font-size:11px;">
+                <input type="checkbox" data-key="${t.key}" class="allsched-enabled" ${enabled ? "checked" : ""}>
+                稼働
+              </label>
+            </div>
+          </div>`;
+      }).join("");
+    }
+
+    async function loadAllSchedules() {
+      const apiKey = AppStorage.get("sh_supabase_key", "");
+      const settingsUrl = getSettingsApiUrl();
+      if (!apiKey || !settingsUrl) { alert("先に⚙️設定でSupabase APIキーとマネージャーAPI URLを入力してください！"); return; }
+
+      try {
+        const res = await fetchWithAuth(settingsUrl + "/schedules", { method: "GET" });
+        const result = await res.json();
+        if (!result.success) return;
+        const savedMap = {};
+        (result.data || []).forEach((row) => {
+          const key = `${row.task_type}-${row.slot_no}`;
+          savedMap[key] = { hour: row.hour, enabled: row.enabled };
+        });
+        renderAllSchedulesList(savedMap);
+      } catch (e) {}
+    }
+
+    async function saveAllSchedulesModal() {
+      const apiKey = AppStorage.get("sh_supabase_key", "");
+      const settingsUrl = getSettingsApiUrl();
+      if (!apiKey || !settingsUrl) { alert("先に⚙️設定でSupabase APIキーとマネージャーAPI URLを入力してください！"); return; }
+
+      const hourInputs = document.querySelectorAll(".allsched-hour");
+      const enabledInputs = document.querySelectorAll(".allsched-enabled");
+      const enabledMap = {};
+      enabledInputs.forEach((el) => { enabledMap[el.dataset.key] = el.checked; });
+
+      const schedules = ALL_SCHEDULE_TASKS.map((t) => {
+        const hourEl = Array.from(hourInputs).find((el) => el.dataset.key === t.key);
+        return {
+          task_type: t.task_type,
+          slot_no: t.slot_no,
+          schedule_type: "daily",
+          hour: parseInt(hourEl ? hourEl.value : t.defaultHour, 10) || 0,
+          enabled: !!enabledMap[t.key],
+        };
+      });
+
+      try {
+        const res = await fetchWithAuth(settingsUrl + "/schedules", {
+          method: "PUT",
+          body: JSON.stringify({ schedules }),
+        });
+        const result = await res.json();
+        if (result.success) {
+          alert("✅ 実行予約を保存しました！");
+          closeAllSchedulesModal();
+        } else {
+          alert("保存に失敗しました: " + (result.message || "不明なエラー"));
+        }
+      } catch (e) {
+        alert("通信エラーが発生しました");
+      }
+    }
   </script>
 
   <div id="hazmatGuideModal" class="modal" onclick="closeHazmatGuide()">
