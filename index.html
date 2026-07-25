@@ -941,7 +941,7 @@
   <div id="view-amazon" class="view">
     <div class="content">
       <div class="search-box">
-        <input type="text" id="amazonKw" placeholder="ASINや型番を入力...">
+        <input type="text" id="amazonKw" placeholder="ASINや型番を入力..." onkeypress="if(event.keyCode==13) runAmazonResearch()">
         <button onclick="runAmazonResearch()" id="searchBtn">解析</button>
       </div>
 
@@ -1029,6 +1029,7 @@
         </div>
         <div style="display:flex; gap:4px;">
           <button onclick="copyAsins20()" style="background:#f7941d; color:white; border:none; padding:8px 12px; border-radius:6px; font-size:11px; font-weight:bold; box-shadow:0 1px 3px rgba(0,0,0,0.1);"><i class="fas fa-copy"></i> ASIN20件コピー</button>
+          <button onclick="openSellerCentral20()" style="background:#805ad5; color:white; border:none; padding:8px 12px; border-radius:6px; font-size:11px; font-weight:bold; box-shadow:0 1px 3px rgba(0,0,0,0.1);"><i class="fas fa-lock"></i> セラセン確認</button>
           <button onclick="removeCheckedItems()" style="background:#e53e3e; color:white; border:none; padding:8px 12px; border-radius:6px; font-size:11px; font-weight:bold; box-shadow:0 1px 3px rgba(0,0,0,0.1);"><i class="fas fa-trash-alt"></i> チェック削除</button>
         </div>
       </div>
@@ -3079,7 +3080,6 @@ async function syncPatrolData() {
                 <div style="display:flex; flex-direction:column; gap:6px; align-items:center;">
                   <a href="https://keepa.com/#!product/5-${item.asin}" target="_blank" style="background:#55a676; color:white; text-decoration:none; padding:6px 0; border-radius:4px; font-size:11px; font-weight:bold; display:flex; align-items:center; justify-content:center; width:100%; box-shadow:0 1px 2px rgba(0,0,0,0.1); gap:4px;"><i class="fas fa-chart-line"></i> Keepa</a>
                   <a href="https://www.amazon.co.jp/dp/${item.asin}" target="_blank" style="background:#f7941d; color:white; text-decoration:none; padding:6px 0; border-radius:4px; font-size:11px; font-weight:bold; display:flex; align-items:center; justify-content:center; width:100%; box-shadow:0 1px 2px rgba(0,0,0,0.1); gap:4px;"><i class="fab fa-amazon"></i> Amazon</a>
-                  <a href="https://sellercentral.amazon.co.jp/product-search/search?page=product-search&search=${item.asin}" target="_blank" style="background:#805ad5; color:white; text-decoration:none; padding:6px 0; border-radius:4px; font-size:11px; font-weight:bold; display:flex; align-items:center; justify-content:center; width:100%; box-shadow:0 1px 2px rgba(0,0,0,0.1); gap:4px;"><i class="fas fa-lock"></i> セラセン確認</a>
                 </div>
               </td>
             </tr>`;
@@ -3149,6 +3149,20 @@ async function syncPatrolData() {
         }
 
     // 4️⃣ ASINを20件ずつコピーして「別アプリで確認」に変更！
+        // 🌟 現在の20件バッチをセラーセントラルの商品検索でまとめて開く
+        function openSellerCentral20() {
+          if(globalResearcherData.length === 0) return;
+
+          const targetItems = globalResearcherData.slice(asinCopyIndex, asinCopyIndex + 20);
+          if(targetItems.length === 0) {
+            alert("すべてのASINを確認済みです！\n最初から確認し直す場合は一度他の画面へ移動してください。");
+            return;
+          }
+
+          const asinString = targetItems.map(i => i.asin).join(',');
+          window.open(`https://sellercentral.amazon.co.jp/product-search/search?page=product-search&search=${encodeURIComponent(asinString)}`, '_blank');
+        }
+
         function copyAsins20() {
           if(globalResearcherData.length === 0) return;
           
