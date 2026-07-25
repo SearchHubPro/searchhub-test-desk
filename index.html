@@ -461,6 +461,10 @@
         <i class="fas fa-clock" style="color:#805ad5;"></i>実行予約
       </button>
 
+      <button class="dash-btn" onclick="openView('view-job-logs'); loadJobLogs();">
+        <i class="fas fa-list-alt" style="color:#2b6cb0;"></i>実行ログ
+      </button>
+
     </div>
   </div> 
 
@@ -476,6 +480,16 @@
                 <button class="dash-btn" onclick="openView('view-expense'); loadExpenseListData();"><i class="fas fa-file-invoice-dollar" style="color:#e53e3e;"></i>経費一覧</button>
 <button class="dash-btn" onclick="openView('view-manager-settings'); loadInfoSettingsView();"><i class="fas fa-table" style="color:#4a5568;"></i>情報設定</button>
       </div>
+    </div>
+  </div>
+
+  <div id="view-job-logs" class="view">
+    <div class="content">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <div style="font-size:12px; color:#718096;">直近100件の実行ログです。</div>
+        <button onclick="loadJobLogs()" style="background:#edf2f7; color:#4a5568; border:none; padding:8px 12px; border-radius:6px; font-weight:bold; font-size:11px; cursor:pointer;"><i class="fas fa-sync-alt"></i> 更新</button>
+      </div>
+      <div id="job-logs-list"></div>
     </div>
   </div>
 
@@ -5246,6 +5260,58 @@ async function syncPatrolData() {
         }
       } catch (e) {
         alert("通信エラーが発生しました");
+      }
+    }
+
+    // =========================================================
+    // 実行ログ
+    // =========================================================
+    const JOB_TYPE_LABELS = {
+      research: "🔍 リサーチャー(手動)",
+      research_keepa: "🔍 Keepa取得",
+      research_market_check: "🔍 ヤフオク巡回",
+      seller: "👤 セラー抽出",
+      expiry: "🗑️ 期限切れチェック",
+      update: "🔄 在庫データ更新",
+      watcher_sync: "🌐 検索URL同期(ウォッチャー)",
+      sniper_sync: "🎯 検索URL同期(スナイパー)",
+      watcher_patrol: "🚀 自動巡回",
+      manager_price_revision: "💰 価格改定",
+      manager_sync: "📊 仕入れ・販売同期",
+    };
+
+    async function loadJobLogs() {
+      const container = document.getElementById("job-logs-list");
+      container.innerHTML = '<div style="text-align:center; color:#a0aec0; padding:20px;">読み込み中...</div>';
+
+      const mgrUrl = AppStorage.get("sh_sniper_url", "") || AppStorage.get("sh_tensite_url", "");
+      try {
+        const res = await fetchWithAuth(mgrUrl, { method: "POST", body: JSON.stringify({ command: "getJobLogs" }) });
+        const result = await res.json();
+        if (!result.success) { container.innerHTML = '<div style="text-align:center; color:#e53e3e; padding:20px;">取得に失敗しました</div>'; return; }
+
+        const logs = result.data || [];
+        if (logs.length === 0) {
+          container.innerHTML = '<div style="text-align:center; color:#a0aec0; padding:20px;">まだログがありません</div>';
+          return;
+        }
+
+        const levelColor = { info: "#4a5568", success: "#38a169", error: "#e53e3e" };
+        container.innerHTML = logs.map((l) => {
+          const d = new Date(l.created_at);
+          const dateStr = `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+          const label = JOB_TYPE_LABELS[l.job_type] || l.job_type;
+          return `
+            <div style="background:#fff; border-left:3px solid ${levelColor[l.level] || "#4a5568"}; border-radius:6px; padding:10px 12px; margin-bottom:6px; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+              <div style="display:flex; justify-content:space-between; font-size:11px; color:#718096; margin-bottom:2px;">
+                <span>${label}</span>
+                <span>${dateStr}</span>
+              </div>
+              <div style="font-size:12px; color:${levelColor[l.level] || "#333"}; word-break:break-all;">${escapeHtml(l.message)}</div>
+            </div>`;
+        }).join("");
+      } catch (e) {
+        container.innerHTML = '<div style="text-align:center; color:#e53e3e; padding:20px;">通信エラーが発生しました</div>';
       }
     }
   </script>
