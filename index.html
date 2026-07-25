@@ -4790,16 +4790,16 @@ async function syncPatrolData() {
 
   <script>
     const ALL_SCHEDULE_TASKS = [
-      { key: "research-1",        task_type: "research",               slot_no: 1, label: "🔍 自動リサーチ開始（Keepa取得＋ヤフオク巡回）", defaultHour: 6 },
-      { key: "seller-1",          task_type: "seller",                 slot_no: 1, label: "📦 セラーリスト挿入",                             defaultHour: 3 },
-      { key: "expiry-1",          task_type: "expiry",                 slot_no: 1, label: "🗑️ 期限切れチェック",                            defaultHour: 4 },
-      { key: "update-1",         task_type: "update",                 slot_no: 1, label: "🔄 在庫データ更新",                               defaultHour: 5 },
-      { key: "watcher_sync-1",    task_type: "watcher_sync",           slot_no: 1, label: "🌐 検索URL同期（ウォッチャー）",                   defaultHour: 3 },
-      { key: "sniper_sync-1",     task_type: "sniper_sync",            slot_no: 1, label: "🎯 検索URL同期（スナイパー）",                     defaultHour: 3 },
-      { key: "watcher_patrol-1",  task_type: "watcher_patrol",         slot_no: 1, label: "🚀 自動巡回（1回目）",                             defaultHour: 7 },
-      { key: "watcher_patrol-2",  task_type: "watcher_patrol",         slot_no: 2, label: "🚀 自動巡回（2回目）",                             defaultHour: 17 },
-      { key: "manager_price_revision-1", task_type: "manager_price_revision", slot_no: 1, label: "💰 価格改定を自動実行",                    defaultHour: 2 },
-      { key: "manager_sync-1",    task_type: "manager_sync",           slot_no: 1, label: "📊 仕入れ・販売同期",                             defaultHour: 4 },
+      { key: "research-1",        task_type: "research",               slot_no: 1, label: "🔍 自動リサーチ開始（Keepa取得＋ヤフオク巡回）", defaultHour: 0,  defaultEnabled: true },
+      { key: "seller-1",          task_type: "seller",                 slot_no: 1, label: "📦 セラーリスト挿入",                             defaultHour: 18, defaultEnabled: false },
+      { key: "expiry-1",          task_type: "expiry",                 slot_no: 1, label: "🗑️ 期限切れチェック",                            defaultHour: 23, defaultEnabled: false },
+      { key: "update-1",         task_type: "update",                 slot_no: 1, label: "🔄 在庫データ更新",                               defaultHour: 22, defaultEnabled: false },
+      { key: "watcher_sync-1",    task_type: "watcher_sync",           slot_no: 1, label: "🌐 検索URL同期（ウォッチャー）",                   defaultHour: 2,  defaultEnabled: false },
+      { key: "sniper_sync-1",     task_type: "sniper_sync",            slot_no: 1, label: "🎯 検索URL同期（スナイパー）",                     defaultHour: 2,  defaultEnabled: false },
+      { key: "watcher_patrol-1",  task_type: "watcher_patrol",         slot_no: 1, label: "🚀 自動巡回（1回目）",                             defaultHour: 6,  defaultEnabled: false },
+      { key: "watcher_patrol-2",  task_type: "watcher_patrol",         slot_no: 2, label: "🚀 自動巡回（2回目）",                             defaultHour: 17, defaultEnabled: false },
+      { key: "manager_price_revision-1", task_type: "manager_price_revision", slot_no: 1, label: "💰 価格改定を自動実行",                    defaultHour: 0,  defaultEnabled: false },
+      { key: "manager_sync-1",    task_type: "manager_sync",           slot_no: 1, label: "📊 仕入れ・販売同期",                             defaultHour: 1,  defaultEnabled: true },
     ];
 
     function getSettingsApiUrl() {
@@ -4828,7 +4828,7 @@ async function syncPatrolData() {
       container.innerHTML = ALL_SCHEDULE_TASKS.map((t) => {
         const saved = savedMap[t.key] || {};
         const hour = saved.hour !== undefined ? saved.hour : t.defaultHour;
-        const enabled = saved.enabled === true;
+        const enabled = saved.enabled !== undefined ? saved.enabled === true : !!t.defaultEnabled;
         const headerHtml = groupHeaderBefore[t.key]
           ? `<div style="font-size:11px; font-weight:bold; color:#805ad5; margin-top:14px; margin-bottom:4px; letter-spacing:0.5px;">${groupHeaderBefore[t.key]}</div>`
           : "";
