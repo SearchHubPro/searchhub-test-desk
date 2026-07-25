@@ -488,7 +488,119 @@
         
         <button class="dash-btn" onclick="openView('view-purchase-list')"><i class="fas fa-shopping-cart" style="color:#dd6b20;"></i>仕入れリスト</button>
 
+        <button class="dash-btn" onclick="openView('view-seller-pending'); loadSellerCandidates('pending');"><i class="fas fa-hourglass-half" style="color:#d69e2e;"></i>セラー1時保管所</button>
+
+        <button class="dash-btn" onclick="openView('view-seller-approved'); loadSellerCandidates('approved');"><i class="fas fa-check-circle" style="color:#38a169;"></i>セラーリスト</button>
+
+        <button class="dash-btn" onclick="openView('view-researcher-settings'); switchResearcherSettingTab('general');"><i class="fas fa-sliders-h" style="color:#4a5568;"></i>リサーチャー設定</button>
+
       </div>
+    </div>
+  </div>
+
+  <div id="view-seller-pending" class="view">
+    <div class="content">
+      <div style="font-size:12px; color:#718096; margin-bottom:12px;">条件に合致し、まだ承認していないセラーの一覧です。</div>
+      <div id="seller-pending-list"></div>
+    </div>
+  </div>
+
+  <div id="view-seller-approved" class="view">
+    <div class="content">
+      <div style="font-size:12px; color:#718096; margin-bottom:12px;">承認済み(セラーリスト入り)のセラー一覧です。定期的にこのセラーの出品からASINを発見します。</div>
+      <div id="seller-approved-list"></div>
+    </div>
+  </div>
+
+  <div id="view-researcher-settings" class="view">
+    <div class="content">
+      <div style="display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap;">
+        <button id="rtab-btn-general" onclick="switchResearcherSettingTab('general')" style="flex:1; min-width:70px; padding:10px 4px; border:none; border-radius:8px; background:#1a365d; color:white; font-weight:bold; font-size:11px; cursor:pointer;">⚙️ 各種設定</button>
+        <button id="rtab-btn-batch" onclick="switchResearcherSettingTab('batch')" style="flex:1; min-width:70px; padding:10px 4px; border:none; border-radius:8px; background:#edf2f7; color:#4a5568; font-weight:bold; font-size:11px; cursor:pointer;">🔢 バッチ設定</button>
+        <button id="rtab-btn-rank" onclick="switchResearcherSettingTab('rank')" style="flex:1; min-width:70px; padding:10px 4px; border:none; border-radius:8px; background:#edf2f7; color:#4a5568; font-weight:bold; font-size:11px; cursor:pointer;">🏆 ランク選別</button>
+        <button id="rtab-btn-seller" onclick="switchResearcherSettingTab('seller')" style="flex:1; min-width:70px; padding:10px 4px; border:none; border-radius:8px; background:#edf2f7; color:#4a5568; font-weight:bold; font-size:11px; cursor:pointer;">👤 セラー抽出</button>
+      </div>
+
+      <div id="rpanel-general" class="rsetting-panel" style="display:block;">
+        <div style="background:#f7fafc; border-radius:12px; padding:16px;">
+          <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;">🔑 Keepa APIキー</label>
+          <input type="text" id="rs-keepaApiKey" style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #cbd5e0; border-radius:6px; font-size:13px; margin-bottom:12px;">
+
+          <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;">💰 目標利益率 (%)</label>
+          <input type="number" id="rs-profitMargin" style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #cbd5e0; border-radius:6px; font-size:13px; margin-bottom:12px;">
+
+          <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;">🚫 除外ワード(URL末尾用)</label>
+          <textarea id="rs-excludeWords" rows="2" style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #cbd5e0; border-radius:6px; font-size:12px; margin-bottom:12px;"></textarea>
+
+          <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;">🚫 除外ブランド(改行区切り)</label>
+          <textarea id="rs-excludeBrands" rows="2" style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #cbd5e0; border-radius:6px; font-size:12px; margin-bottom:12px;"></textarea>
+
+          <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;">🔁 連続実行URL数</label>
+          <input type="number" id="rs-maxUrls" style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #cbd5e0; border-radius:6px; font-size:13px; margin-bottom:12px;">
+
+          <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;">✅ ヤフオク合格ライン(件数以上)</label>
+          <input type="number" id="rs-minRecordCount" style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #cbd5e0; border-radius:6px; font-size:13px;">
+        </div>
+      </div>
+
+      <div id="rpanel-batch" class="rsetting-panel" style="display:none;">
+        <div style="background:#f7fafc; border-radius:12px; padding:16px;">
+          <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;">一度に取得する件数</label>
+          <input type="number" id="rs-batchSize" style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #cbd5e0; border-radius:6px; font-size:13px; margin-bottom:12px;">
+
+          <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;">待機時間(秒)</label>
+          <input type="number" id="rs-batchCooldown" style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #cbd5e0; border-radius:6px; font-size:13px;">
+        </div>
+      </div>
+
+      <div id="rpanel-rank" class="rsetting-panel" style="display:none;">
+        <div style="background:#f7fafc; border-radius:12px; padding:16px;">
+          <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;">通常販売金額(下限〜上限)</label>
+          <div style="display:flex; gap:8px; margin-bottom:12px;">
+            <input type="number" id="rs-priceMin" style="width:100%; padding:8px; border:1px solid #cbd5e0; border-radius:6px; font-size:13px;">
+            <input type="number" id="rs-priceMax" style="width:100%; padding:8px; border:1px solid #cbd5e0; border-radius:6px; font-size:13px;">
+          </div>
+          <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;">SR販売金額(下限〜上限)</label>
+          <div style="display:flex; gap:8px; margin-bottom:12px;">
+            <input type="number" id="rs-srPriceMin" style="width:100%; padding:8px; border:1px solid #cbd5e0; border-radius:6px; font-size:13px;">
+            <input type="number" id="rs-srPriceMax" style="width:100%; padding:8px; border:1px solid #cbd5e0; border-radius:6px; font-size:13px;">
+          </div>
+          <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;">FBA料金(円)</label>
+          <input type="number" id="rs-fbaFeeDefault" style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #cbd5e0; border-radius:6px; font-size:13px; margin-bottom:12px;">
+
+          <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:6px;">残すランク</label>
+          <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            <label style="font-size:12px;"><input type="checkbox" class="rs-keepRank" value="SR"> SR</label>
+            <label style="font-size:12px;"><input type="checkbox" class="rs-keepRank" value="S"> S</label>
+            <label style="font-size:12px;"><input type="checkbox" class="rs-keepRank" value="A"> A</label>
+            <label style="font-size:12px;"><input type="checkbox" class="rs-keepRank" value="B"> B</label>
+            <label style="font-size:12px;"><input type="checkbox" class="rs-keepRank" value="C"> C</label>
+            <label style="font-size:12px;"><input type="checkbox" class="rs-keepRank" value="D"> D</label>
+            <label style="font-size:12px;"><input type="checkbox" class="rs-keepRank" value="E"> E</label>
+          </div>
+        </div>
+      </div>
+
+      <div id="rpanel-seller" class="rsetting-panel" style="display:none;">
+        <div style="background:#f7fafc; border-radius:12px; padding:16px;">
+          <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;">評価数(下限〜上限)</label>
+          <div style="display:flex; gap:8px; margin-bottom:12px;">
+            <input type="number" id="rs-minReview" style="width:100%; padding:8px; border:1px solid #cbd5e0; border-radius:6px; font-size:13px;">
+            <input type="number" id="rs-maxReview" style="width:100%; padding:8px; border:1px solid #cbd5e0; border-radius:6px; font-size:13px;">
+          </div>
+          <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;">在庫数(下限〜上限)</label>
+          <div style="display:flex; gap:8px; margin-bottom:12px;">
+            <input type="number" id="rs-minStock" style="width:100%; padding:8px; border:1px solid #cbd5e0; border-radius:6px; font-size:13px;">
+            <input type="number" id="rs-maxStock" style="width:100%; padding:8px; border:1px solid #cbd5e0; border-radius:6px; font-size:13px;">
+          </div>
+          <label style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:bold;">
+            <input type="checkbox" id="rs-sellerAutoApprove">
+            条件に合うセラーを1時保管所を通さず自動でセラーリストに入れる
+          </label>
+        </div>
+      </div>
+
+      <button onclick="saveResearcherSettings()" style="width:100%; padding:14px; border:none; border-radius:8px; background:#1a365d; color:#fff; font-weight:bold; font-size:14px; cursor:pointer; margin-top:16px;">この内容で保存</button>
     </div>
   </div>
 
@@ -4897,6 +5009,159 @@ async function syncPatrolData() {
         if (result.success) {
           alert("✅ 実行予約を保存しました！");
           closeAllSchedulesModal();
+        } else {
+          alert("保存に失敗しました: " + (result.message || "不明なエラー"));
+        }
+      } catch (e) {
+        alert("通信エラーが発生しました");
+      }
+    }
+
+    // =========================================================
+    // セラー1時保管所 / セラーリスト
+    // =========================================================
+    async function loadSellerCandidates(status) {
+      const containerId = status === "approved" ? "seller-approved-list" : "seller-pending-list";
+      const container = document.getElementById(containerId);
+      container.innerHTML = '<div style="text-align:center; color:#a0aec0; padding:20px;">読み込み中...</div>';
+
+      const mgrUrl = AppStorage.get("sh_sniper_url", "") || AppStorage.get("sh_tensite_url", "");
+      try {
+        const res = await fetchWithAuth(mgrUrl, {
+          method: "POST",
+          body: JSON.stringify({ command: "getSellerCandidates", status: status })
+        });
+        const result = await res.json();
+        if (!result.success) { container.innerHTML = '<div style="text-align:center; color:#e53e3e; padding:20px;">取得に失敗しました</div>'; return; }
+
+        const list = result.data || [];
+        if (list.length === 0) {
+          container.innerHTML = `<div style="text-align:center; color:#a0aec0; padding:20px;">${status === "approved" ? "承認済みのセラーはまだいません" : "1時保管所は空です"}</div>`;
+          return;
+        }
+
+        container.innerHTML = list.map((s) => `
+          <div style="background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-family:monospace; font-weight:bold; color:#1a365d; font-size:13px;">${escapeHtml(s.seller_id)}</div>
+              <div style="font-size:11px; color:#718096; margin-top:2px;">評価数: ${s.review_count ?? "-"} / 在庫数: ${s.stock_count ?? "-"} / 発見元ASIN: ${escapeHtml(s.source_asin || "-")}</div>
+            </div>
+            <div style="display:flex; gap:6px;">
+              ${status === "pending" ? `
+                <button onclick="approveSeller('${s.id}')" style="background:#38a169; color:#fff; border:none; padding:8px 12px; border-radius:6px; font-weight:bold; font-size:12px; cursor:pointer;">承認</button>
+                <button onclick="rejectSeller('${s.id}')" style="background:#e53e3e; color:#fff; border:none; padding:8px 12px; border-radius:6px; font-weight:bold; font-size:12px; cursor:pointer;">却下</button>
+              ` : `
+                <button onclick="deleteSellerCandidate('${s.id}')" style="background:#e53e3e; color:#fff; border:none; padding:8px 12px; border-radius:6px; font-weight:bold; font-size:12px; cursor:pointer;">削除</button>
+              `}
+            </div>
+          </div>`).join("");
+      } catch (e) {
+        container.innerHTML = '<div style="text-align:center; color:#e53e3e; padding:20px;">通信エラーが発生しました</div>';
+      }
+    }
+
+    async function approveSeller(id) {
+      const mgrUrl = AppStorage.get("sh_sniper_url", "") || AppStorage.get("sh_tensite_url", "");
+      await fetchWithAuth(mgrUrl, { method: "POST", body: JSON.stringify({ command: "approveSellerCandidate", id }) });
+      loadSellerCandidates("pending");
+    }
+    async function rejectSeller(id) {
+      const mgrUrl = AppStorage.get("sh_sniper_url", "") || AppStorage.get("sh_tensite_url", "");
+      await fetchWithAuth(mgrUrl, { method: "POST", body: JSON.stringify({ command: "rejectSellerCandidate", id }) });
+      loadSellerCandidates("pending");
+    }
+    async function deleteSellerCandidate(id) {
+      if (!confirm("このセラーをセラーリストから削除しますか？")) return;
+      const mgrUrl = AppStorage.get("sh_sniper_url", "") || AppStorage.get("sh_tensite_url", "");
+      await fetchWithAuth(mgrUrl, { method: "POST", body: JSON.stringify({ command: "deleteSellerCandidate", id }) });
+      loadSellerCandidates("approved");
+    }
+
+    // =========================================================
+    // リサーチャー設定(各種設定/バッチ設定/ランク選別設定/セラー抽出設定)
+    // =========================================================
+    function switchResearcherSettingTab(tabKey) {
+      document.querySelectorAll('.rsetting-panel').forEach(p => p.style.display = 'none');
+      const tabs = { general: 'rtab-btn-general', batch: 'rtab-btn-batch', rank: 'rtab-btn-rank', seller: 'rtab-btn-seller' };
+      Object.values(tabs).forEach(id => { const el = document.getElementById(id); if (el) { el.style.background = '#edf2f7'; el.style.color = '#4a5568'; } });
+      const panel = document.getElementById(`rpanel-${tabKey}`);
+      if (panel) panel.style.display = 'block';
+      const btn = document.getElementById(tabs[tabKey]);
+      if (btn) { btn.style.background = '#1a365d'; btn.style.color = 'white'; }
+      loadResearcherSettings();
+    }
+
+    async function loadResearcherSettings() {
+      const apiKey = AppStorage.get("sh_supabase_key", "");
+      const settingsUrl = getSettingsApiUrl();
+      if (!apiKey || !settingsUrl) return;
+
+      try {
+        const res = await fetchWithAuth(settingsUrl, { method: "GET" });
+        const result = await res.json();
+        if (!result.success) return;
+        const d = result.data || {};
+
+        document.getElementById("rs-keepaApiKey").value = d.keepa_api_key || "";
+        document.getElementById("rs-profitMargin").value = d.profit_margin ?? 20;
+        document.getElementById("rs-excludeWords").value = d.exclude_words || "";
+        document.getElementById("rs-excludeBrands").value = d.exclude_brands || "";
+        document.getElementById("rs-maxUrls").value = d.max_urls_per_run ?? 3;
+        document.getElementById("rs-minRecordCount").value = d.min_record_count ?? 3;
+
+        document.getElementById("rs-batchSize").value = d.batch_size ?? 20;
+        document.getElementById("rs-batchCooldown").value = d.batch_cooldown_sec ?? 10;
+
+        document.getElementById("rs-priceMin").value = d.price_min ?? "";
+        document.getElementById("rs-priceMax").value = d.price_max ?? "";
+        document.getElementById("rs-srPriceMin").value = d.sr_price_min ?? "";
+        document.getElementById("rs-srPriceMax").value = d.sr_price_max ?? "";
+        document.getElementById("rs-fbaFeeDefault").value = d.fba_fee_default ?? "";
+        const keepRanks = d.keep_ranks || ["SR", "S", "A", "B"];
+        document.querySelectorAll(".rs-keepRank").forEach(cb => { cb.checked = keepRanks.includes(cb.value); });
+
+        document.getElementById("rs-minReview").value = d.min_review_count ?? 50;
+        document.getElementById("rs-maxReview").value = d.max_review_count ?? 500;
+        document.getElementById("rs-minStock").value = d.min_seller_stock ?? 80;
+        document.getElementById("rs-maxStock").value = d.max_seller_stock ?? 300;
+        document.getElementById("rs-sellerAutoApprove").checked = d.seller_auto_approve === true;
+      } catch (e) {}
+    }
+
+    async function saveResearcherSettings() {
+      const apiKey = AppStorage.get("sh_supabase_key", "");
+      const settingsUrl = getSettingsApiUrl();
+      if (!apiKey || !settingsUrl) { alert("先に⚙️設定でSupabase APIキーとマネージャーAPI URLを入力してください！"); return; }
+
+      const keepRanks = Array.from(document.querySelectorAll(".rs-keepRank:checked")).map(cb => cb.value);
+
+      const payload = {
+        keepa_api_key: document.getElementById("rs-keepaApiKey").value.trim(),
+        profit_margin: parseFloat(document.getElementById("rs-profitMargin").value) || 20,
+        exclude_words: document.getElementById("rs-excludeWords").value,
+        exclude_brands: document.getElementById("rs-excludeBrands").value,
+        max_urls_per_run: parseInt(document.getElementById("rs-maxUrls").value, 10) || 3,
+        min_record_count: parseInt(document.getElementById("rs-minRecordCount").value, 10) || 3,
+        batch_size: parseInt(document.getElementById("rs-batchSize").value, 10) || 20,
+        batch_cooldown_sec: parseInt(document.getElementById("rs-batchCooldown").value, 10) || 10,
+        price_min: parseFloat(document.getElementById("rs-priceMin").value) || null,
+        price_max: parseFloat(document.getElementById("rs-priceMax").value) || null,
+        sr_price_min: parseFloat(document.getElementById("rs-srPriceMin").value) || null,
+        sr_price_max: parseFloat(document.getElementById("rs-srPriceMax").value) || null,
+        fba_fee_default: parseFloat(document.getElementById("rs-fbaFeeDefault").value) || null,
+        keep_ranks: keepRanks,
+        min_review_count: parseInt(document.getElementById("rs-minReview").value, 10) || 50,
+        max_review_count: parseInt(document.getElementById("rs-maxReview").value, 10) || 500,
+        min_seller_stock: parseInt(document.getElementById("rs-minStock").value, 10) || 80,
+        max_seller_stock: parseInt(document.getElementById("rs-maxStock").value, 10) || 300,
+        seller_auto_approve: document.getElementById("rs-sellerAutoApprove").checked,
+      };
+
+      try {
+        const res = await fetchWithAuth(settingsUrl, { method: "PUT", body: JSON.stringify(payload) });
+        const result = await res.json();
+        if (result.success) {
+          alert("✅ リサーチャー設定を保存しました！");
         } else {
           alert("保存に失敗しました: " + (result.message || "不明なエラー"));
         }
