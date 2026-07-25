@@ -738,7 +738,7 @@
             </tr>
           </thead>
           <tbody id="bulkRegisterBody">
-            <tr><td colspan="8" style="text-align:center; padding:30px; color:#a0aec0;">「データを取得」ボタンを押してな！</td></tr>
+            <tr><td colspan="8" style="text-align:center; padding:30px; color:#a0aec0;">「データを取得」ボタンを押してください！</td></tr>
           </tbody>
         </table>
       </div>
@@ -785,7 +785,7 @@
             </tr>
           </thead>
           <tbody id="purchaseListResult">
-            <tr><td colspan="6" style="text-align:center; color:#a0aec0; padding:30px;">「データを取得」ボタンを押してな！</td></tr>
+            <tr><td colspan="6" style="text-align:center; color:#a0aec0; padding:30px;">「データを取得」ボタンを押してください！</td></tr>
           </tbody>
         </table>
       </div>
@@ -824,7 +824,7 @@
         <div id="amazonHistoryArea" style="display:flex; flex-direction:column; gap:10px; margin-bottom:12px;"></div>
         
         <div id="amazonResult">
-          <div class="card" style="text-align:center; color:#a0aec0; padding:20px; font-size:12px;">ASINやキーワードを入力して解析ボタンを押してな！</div>
+          <div class="card" style="text-align:center; color:#a0aec0; padding:20px; font-size:12px;">ASINやキーワードを入力して解析ボタンを押してください！</div>
         </div>
       </div>
       
@@ -882,7 +882,7 @@
         <button onclick="searchHistory()" style="background:#4285f4;"><i class="fas fa-search"></i> 検索</button>
       </div>
       <div id="historyResult">
-        <div class="card" style="text-align:center; color:#a0aec0; padding:30px 10px; font-size:12px;">ASINを入力して検索ボタンを押してな！</div>
+        <div class="card" style="text-align:center; color:#a0aec0; padding:30px 10px; font-size:12px;">ASINを入力して検索ボタンを押してください！</div>
       </div>
     </div>
   </div>
@@ -1143,7 +1143,7 @@
         <option value="その他">✍️ その他 (手入力)</option>
       </select>
       
-      <input type="text" id="expTypeCustom" placeholder="経費の種類を入力してな" style="display:none; width:100%; padding:10px; margin-top:8px; border:1px solid #e53e3e; border-radius:6px; font-size:14px; box-sizing:border-box; outline:none;">
+      <input type="text" id="expTypeCustom" placeholder="経費の種類を入力してください" style="display:none; width:100%; padding:10px; margin-top:8px; border:1px solid #e53e3e; border-radius:6px; font-size:14px; box-sizing:border-box; outline:none;">
 
       <label style="font-size:11px; font-weight:bold; color:#4a5568; display:block; margin-top:12px;">金額 (必須)</label>
       <input type="number" id="expAmount" placeholder="例: 1500" style="width:100%; padding:10px; margin-top:4px; border:1px solid #ccc; border-radius:6px; font-size:18px; font-weight:bold; color:#e53e3e; box-sizing:border-box;">
@@ -2013,7 +2013,7 @@ async function syncPatrolData() {
         
         async function toggleDiscord() {
           const sniperUrl = AppStorage.get("sh_sniper_url", "");
-          if (!sniperUrl) return alert("⚙️設定画面から『S(スナイパー)側 GAS URL』を先に登録してな！");
+          if (!sniperUrl) return alert("⚙️設定画面から『S(スナイパー)側 GAS URL』を先に登録してください！");
           let currentStatus = AppStorage.get("sh_discord_toggle", "off");
           let nextStatus = currentStatus === "on" ? "off" : "on";
           updateDiscordBtnUI(nextStatus);
@@ -2108,13 +2108,13 @@ async function syncPatrolData() {
           return `${y}/${m}/${d} ${h}:${min}`;
         }
         function escapeHtml(str) { if(!str) return ""; return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
-        function openManager() { const url = AppStorage.get("sh_ssurl", ""); if (!url) { openConfig(); return alert("⚙️設定から販売管理シートのURLを設定してな！"); } window.open(url, "_blank"); }
+        function openManager() { const url = AppStorage.get("sh_ssurl", ""); if (!url) { openConfig(); return alert("⚙️設定から販売管理シートのURLを設定してください！"); } window.open(url, "_blank"); }
 
         async function searchHistory() {
           const asin = document.getElementById('historyAsin').value.trim(); const resDiv = document.getElementById('historyResult');
           if(!asin) { resDiv.innerHTML = '<div class="card" style="text-align:center; color:#e53e3e; font-weight:bold;">ASINを入力してください</div>'; return; }
           const ssUrl = AppStorage.get("sh_ssurl", ""); let targetGasUrl = AppStorage.get("sh_tensite_url", "") || AppStorage.get("sh_sniper_url", "");
-          if (!ssUrl || !targetGasUrl) { openConfig(); return alert("⚙️設定から『販売管理シートURL』と『GAS URL』を登録してな！"); }
+          if (!ssUrl || !targetGasUrl) { openConfig(); return alert("⚙️設定から『販売管理シートURL』と『GAS URL』を登録してください！"); }
           resDiv.innerHTML = '<div class="loading-spinner">⌛ 台帳からすべての実績を抽出中...</div>';
           try {
             const res = await fetchWithAuth(targetGasUrl, { method: 'POST', body: JSON.stringify({ command: 'findPastData', ssUrl: ssUrl, asin: asin }) });
@@ -2183,8 +2183,8 @@ async function syncPatrolData() {
           const kw = document.getElementById("amazonKw").value.trim(); 
           const resView = document.getElementById("amazonResult"); 
           const apiKey = AppStorage.get("sh_keepa", "");
-          if (!kw) return alert("キーワードかASINを入力してな！"); 
-          if (!apiKey) { openConfig(); return alert("⚙️設定からKeepaAPIキーを入力してな！"); }
+          if (!kw) return alert("キーワードかASINを入力してください！"); 
+          if (!apiKey) { openConfig(); return alert("⚙️設定からKeepaAPIキーを入力してください！"); }
           
           resView.innerHTML = '<div class="loading-spinner">⌛ Keepa APIと高速通信・解析中...</div>';
           
@@ -2648,7 +2648,7 @@ async function syncPatrolData() {
         async function loadMonthlyData() {
           const ssUrl = AppStorage.get("sh_ssurl", "");
           let targetGasUrl = AppStorage.get("sh_tensite_url", "") || AppStorage.get("sh_sniper_url", "");
-          if (!ssUrl || !targetGasUrl) { openConfig(); return alert("⚙️設定から『販売管理シートURL』と『GAS URL』を登録してな！"); }
+          if (!ssUrl || !targetGasUrl) { openConfig(); return alert("⚙️設定から『販売管理シートURL』と『GAS URL』を登録してください！"); }
           
           const isPurchase = (currentActiveView === 'view-monthly-purchase');
           const prefix = isPurchase ? 'monthly-purchase' : 'monthly-sales';
@@ -2839,7 +2839,7 @@ async function syncPatrolData() {
           let targetGasUrl = AppStorage.get("sh_tensite_url", "") || AppStorage.get("sh_sniper_url", "");
 
           if (!researcherUrl || !targetGasUrl) {
-            alert("⚙️ 設定から『ResearcherのシートURL』と『GAS URL』を登録してな！");
+            alert("⚙️ 設定から『ResearcherのシートURL』と『GAS URL』を登録してください！");
             return;
           }
 
@@ -3006,7 +3006,7 @@ async function syncPatrolData() {
               alert("❌ 通信エラー: " + e.message);
             }
           } else {
-            alert("設定からResearcherのURLを登録してな！");
+            alert("設定からResearcherのURLを登録してください！");
           }
           
           btn.innerHTML = originalText;
@@ -3028,7 +3028,7 @@ async function syncPatrolData() {
           const asinString = targetItems.map(i => i.asin).join(',');
           
           navigator.clipboard.writeText(asinString).then(() => {
-            alert(`上から ${asinCopyIndex + 1}件目 ～ ${asinCopyIndex + targetItems.length}件目 のASINをコピーしたで！\n別アプリで確認してな！`);
+            alert(`上から ${asinCopyIndex + 1}件目 ～ ${asinCopyIndex + targetItems.length}件目 のASINをコピーしました！\n別アプリで確認してください！`);
             asinCopyIndex += 20; // 次のスタート位置を更新
             
             // 🌟 自動でセラセンを開く処理を削除したで！
@@ -3120,7 +3120,7 @@ async function syncPatrolData() {
 
           if (!ssUrl || !targetGasUrl) {
             openConfig();
-            resDiv.innerHTML = '<div class="card" style="text-align:center; padding:20px; color:#e53e3e; font-weight:bold;">⚙️設定からManagerのURLとGAS URLを登録してな！</div>';
+            resDiv.innerHTML = '<div class="card" style="text-align:center; padding:20px; color:#e53e3e; font-weight:bold;">⚙️設定からManagerのURLとGAS URLを登録してください！</div>';
             return;
           }
 
@@ -3349,7 +3349,7 @@ async function syncPatrolData() {
         let targetGasUrl = AppStorage.get("sh_tensite_url", "") || AppStorage.get("sh_sniper_url", "");
         
         if (!ssUrl || !targetGasUrl) {
-           alert('❌ 設定からManagerのURLとGAS URLを登録してな！');
+           alert('❌ 設定からManagerのURLとGAS URLを登録してください！');
            dropLabel.innerHTML = originalText;
            return;
         }
@@ -3410,7 +3410,7 @@ async function syncPatrolData() {
       const win2 = window.open('https://sellercentral.amazon.co.jp/payments/reports-repository/ref=xx_rrepo_dnav_xx', '_blank');
       
       if (!win1 || !win2) {
-        alert("⚠️ ブラウザのポップアップブロックが作動しました！\n\n画面上部の「URLバー（アドレスバー）」の右端に出ている【✖️マーク】をクリックして、「ポップアップを常に許可する」に設定してからもう一度押してな！");
+        alert("⚠️ ブラウザのポップアップブロックが作動しました！\n\n画面上部の「URLバー（アドレスバー）」の右端に出ている【✖️マーク】をクリックして、「ポップアップを常に許可する」に設定してからもう一度押してください！");
       }
     }
 
@@ -3645,7 +3645,7 @@ async function syncPatrolData() {
       let targetGasUrl = AppStorage.get("sh_tensite_url", "") || AppStorage.get("sh_sniper_url", "");
       
       if (!ssUrl || !targetGasUrl) {
-        return alert("⚙️設定からManagerのURLとGAS URLを登録してな！");
+        return alert("⚙️設定からManagerのURLとGAS URLを登録してください！");
       }
 
       tbody.innerHTML = '';
@@ -3855,7 +3855,7 @@ async function syncPatrolData() {
       let targetGasUrl = AppStorage.get("sh_tensite_url", "") || AppStorage.get("sh_sniper_url", "");
 
       if (!researcherUrl || !targetGasUrl) {
-        return alert("⚙️設定から『SearchHub : ResearcherのURL』と『GAS URL』を登録してな！");
+        return alert("⚙️設定から『SearchHub : ResearcherのURL』と『GAS URL』を登録してください！");
       }
 
       resDiv.innerHTML = '<tr><td colspan="6" class="loading-spinner" style="padding:20px; text-align:center;">⌛ 仕入れsheetからデータを同期中...</td></tr>';
@@ -4052,7 +4052,7 @@ async function syncPatrolData() {
     }
 
     async function deletePurchaseItem() {
-      if(!confirm("ほんまにこの商品を削除してもええか？")) return;
+      if(!confirm("本当にこの商品を削除してもよろしいですか？")) return;
       
       const id = document.getElementById('edit-purchase-id').value;
       const researcherUrl = AppStorage.get("sh_researcher_url", "");
@@ -4089,7 +4089,7 @@ async function syncPatrolData() {
       let targetGasUrl = AppStorage.get("sh_tensite_url", "") || AppStorage.get("sh_sniper_url", "");
       
       if (!ssUrl || !targetGasUrl) {
-        alert("⚙️ 設定から『販売管理シートURL』と『GAS URL』を先に登録してな！");
+        alert("⚙️ 設定から『販売管理シートURL』と『GAS URL』を先に登録してください！");
         return;
       }
 
@@ -4176,7 +4176,7 @@ async function syncPatrolData() {
       let targetGasUrl = AppStorage.get("sh_tensite_url", "") || AppStorage.get("sh_sniper_url", "");
 
       if (!ssUrl || !targetGasUrl || !keepaKey || !sellerId) {
-        alert("⚙️設定画面からURL、Keepaキー、セラーIDを登録してな！");
+        alert("⚙️設定画面からURL、Keepaキー、セラーIDを登録してください！");
         if(btn) { btn.disabled = false; btn.innerText = "在庫更新"; }
         return;
       }
@@ -4343,7 +4343,7 @@ async function syncPatrolData() {
       let type = selectVal;
       if (selectVal === "その他") {
         type = document.getElementById('expTypeCustom').value.trim();
-        if (!type) return alert("経費の種類を入力してな！");
+        if (!type) return alert("経費の種類を入力してください！");
       }
 
       const date = document.getElementById('expDate').value.trim();
@@ -4402,7 +4402,7 @@ async function syncPatrolData() {
       const ssUrl = AppStorage.get("sh_ssurl", "");
       let targetGasUrl = AppStorage.get("sh_tensite_url", "") || AppStorage.get("sh_sniper_url", "");
 
-      if (!ssUrl || !targetGasUrl) return alert("⚙️設定からManagerのURLとGAS URLを登録してな！");
+      if (!ssUrl || !targetGasUrl) return alert("⚙️設定からManagerのURLとGAS URLを登録してください！");
 
       try {
         const res = await fetchWithAuth(targetGasUrl, {
@@ -4493,7 +4493,7 @@ async function syncPatrolData() {
       
       const ssUrl = AppStorage.get("sh_ssurl", "");
       let targetGasUrl = AppStorage.get("sh_tensite_url", "") || AppStorage.get("sh_sniper_url", "");
-      if (!ssUrl || !targetGasUrl) return alert("⚙️ 設定から販売管理シートのURLを登録してな！");
+      if (!ssUrl || !targetGasUrl) return alert("⚙️ 設定から販売管理シートのURLを登録してください！");
 
       document.getElementById('info-suppliers').value = "⏳ シートから最新設定を同期中...";
 
@@ -4634,7 +4634,7 @@ async function syncPatrolData() {
       const sellerId = document.getElementById('gas-setting-sellerid').value.trim();
       const linkedSheetId = document.getElementById('gas-setting-sheeturl').value.trim();
       const serialCode = document.getElementById('gas-setting-serial').value.trim();
-      if(!key || !serialCode) return alert("⚠️ Keepa APIキーとシリアルコードは必須やで！");
+      if(!key || !serialCode) return alert("⚠️ Keepa APIキーとシリアルコードは必須です！");
 
       btn.innerHTML = "保存・認証中..."; btn.disabled = true;
       let targetGasUrl = AppStorage.get("sh_tensite_url", "") || AppStorage.get("sh_sniper_url", "");
@@ -4750,7 +4750,7 @@ async function syncPatrolData() {
         const researcherGasUrl = AppStorage.get("sh_researcher_gas_url", "");
 
         if (!researcherUrl || !researcherGasUrl) {
-          alert("⚙️ 設定画面を開いて『ResearcherのシートURL』と『ResearcherのGAS URL』を両方入れて保存してな！");
+          alert("⚙️ 設定画面を開いて『ResearcherのシートURL』と『ResearcherのGAS URL』を両方入れて保存してください！");
           dropLabel.innerHTML = originalText;
           return;
         }
@@ -4820,7 +4820,7 @@ async function syncPatrolData() {
           if (currentToken) {
             AppStorage.set("sh_fcm_token", currentToken); const sniperUrl = AppStorage.get("sh_sniper_url", "");
             if (sniperUrl) { fetchWithAuth(sniperUrl, { method: 'POST', body: JSON.stringify({ command: 'saveToken', token: currentToken }) }); alert("✅ 通知設定完了！"); btn.innerText = "✅ 通知設定完了"; } 
-            else { alert("⚠️ S側 GAS URL を設定してな！"); btn.innerText = "🔔 通知許可する"; btn.disabled = false; }
+            else { alert("⚠️ S側 GAS URL を設定してください！"); btn.innerText = "🔔 通知許可する"; btn.disabled = false; }
           } else { alert("❌ トークン取得失敗"); btn.innerText = "🔔 通知許可する"; btn.disabled = false; }
         } else { alert("通知ブロック中。"); btn.innerText = "🔔 通知許可する"; btn.disabled = false; }
       } catch (err) { alert("エラー\n" + err.message); btn.innerText = "🔔 通知許可する"; btn.disabled = false; }
