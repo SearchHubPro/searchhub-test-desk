@@ -2212,6 +2212,7 @@ async function syncPatrolData() {
               const firstImg = p.images[0]; imgRaw = (typeof firstImg === 'object') ? (firstImg.l || firstImg.m || firstImg.s) : firstImg;
             } else if (p.imagesCSV) imgRaw = p.imagesCSV.split(',')[0];
             let imageUrl = imgRaw ? (imgRaw.startsWith('http') ? imgRaw : 'https://images-na.ssl-images-amazon.com/images/I/' + imgRaw) : '';
+            window.tmpImg = imageUrl;
             const avgUsed = p.stats.avg90 && p.stats.avg90[2] !== -1 ? p.stats.avg90[2] : 0;
             const minUsed = p.stats.current && p.stats.current[2] !== -1 ? p.stats.current[2] : 0;
             
@@ -2406,6 +2407,7 @@ async function syncPatrolData() {
             sellPrice: sPrice,
             title: window.tmpTitle || "",
             model: window.tmpModel || "",
+            img: window.tmpImg || "",
             fbaFee: window.tmpFbaFee || 0,
             fee: Math.floor(sPrice * ((window.tmpFeePercent || 10) / 100))
           };
@@ -2804,11 +2806,12 @@ async function syncPatrolData() {
             const borderLeftColor = isPurchase ? '#3182ce' : '#e53e3e';
             const profitColor = item.profit >= 0 ? '#07A27B' : '#e53e3e';
             
+            const thumbHtml = item.imgUrl ? `<img src="${item.imgUrl}" style="width:32px; height:32px; object-fit:contain; background:#fff; border:1px solid #e2e8f0; border-radius:6px; margin-right:6px; vertical-align:middle;">` : '';
             html += `
             <tr style="background:#fff; border-bottom:1px solid #f1f5f9;">
               <td style="padding:10px 12px; text-align:center; border-left:4px solid ${borderLeftColor}; font-weight:bold; color:#4a5568;">${item.date}</td>
               <td style="padding:10px 12px; font-family:monospace; font-weight:bold; color:#0369a1;">${escapeHtml(item.asin)}</td>
-              <td style="padding:10px 12px; white-space:normal; font-weight:bold; color:#2d3748; line-height:1.4;">${nameAndOrder}</td>
+              <td style="padding:10px 12px; white-space:normal; font-weight:bold; color:#2d3748; line-height:1.4;">${thumbHtml}${nameAndOrder}</td>
               <td style="padding:10px 12px; text-align:right; font-weight:bold; color:#4a5568;">¥${Number(item.cost).toLocaleString()}</td>
               <td style="padding:10px 12px; text-align:right; font-weight:bold; color:#1a365d;">¥${Number(item.sales).toLocaleString()}</td>
               <td style="padding:10px 12px; text-align:right; font-weight:900; color:${profitColor}; font-size:13px;">¥${Number(item.profit).toLocaleString()}</td>
@@ -3235,9 +3238,14 @@ async function syncPatrolData() {
           </td>
           
           <td style="padding: 12px 8px; vertical-align: middle; max-width: 250px;">
-            <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight:bold; color:#1a365d; margin-bottom:4px; font-size:12px;" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</div>
-            <span style="font-family:monospace; background:#e0f2fe; color:#0369a1; padding:2px 4px; border-radius:4px; font-size:10px; font-weight:bold;">${escapeHtml(item.asin)}</span>
-            <span style="font-size:10px; color:#4a5568; font-weight:bold; margin-left:4px;">SKU: ${escapeHtml(item.sku)}</span>
+            <div style="display:flex; align-items:flex-start; gap:8px;">
+              ${item.imgUrl ? `<img src="${item.imgUrl}" style="width:36px; height:36px; object-fit:contain; background:#fff; border:1px solid #e2e8f0; border-radius:6px; flex-shrink:0;">` : ''}
+              <div style="min-width:0;">
+                <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight:bold; color:#1a365d; margin-bottom:4px; font-size:12px;" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</div>
+                <span style="font-family:monospace; background:#e0f2fe; color:#0369a1; padding:2px 4px; border-radius:4px; font-size:10px; font-weight:bold;">${escapeHtml(item.asin)}</span>
+                <span style="font-size:10px; color:#4a5568; font-weight:bold; margin-left:4px;">SKU: ${escapeHtml(item.sku)}</span>
+              </div>
+            </div>
           </td>
 
           <td style="padding: 12px 8px; font-weight:bold; color:#2d3748; text-align: center; vertical-align: middle;">
