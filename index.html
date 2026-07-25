@@ -5135,7 +5135,11 @@ async function syncPatrolData() {
               <div style="min-width:0;">
                 <div style="font-weight:bold; color:#1a365d; font-size:14px; margin-bottom:2px;">${escapeHtml(s.seller_name || "(セラー名不明)")}</div>
                 <div style="font-family:monospace; color:#718096; font-size:11px; margin-bottom:4px;">${escapeHtml(s.seller_id)}</div>
-                <div style="font-size:11px; color:#718096;">評価数: <b>${s.review_count ?? "-"}</b> / 在庫数: <b>${s.stock_count ?? "-"}</b><br>発見元ASIN: ${escapeHtml(s.source_asin || "-")}</div>
+                <div style="font-size:11px; color:#718096;">評価数: <b>${s.review_count ?? "-"}</b>${s.rating_percent != null ? ` (${s.rating_percent}%)` : ""} / 在庫数: <b>${s.stock_count ?? "-"}</b><br>発見元ASIN: ${escapeHtml(s.source_asin || "-")}</div>
+                ${(s.sample_titles && s.sample_titles.length > 0) ? `
+                <div style="font-size:10px; color:#a0aec0; margin-top:4px; line-height:1.5;">
+                  📦 取り扱い商品例:<br>${s.sample_titles.slice(0,5).map((t) => `・${escapeHtml((t||"").slice(0,40))}`).join("<br>")}
+                </div>` : ""}
               </div>
               <div style="display:flex; flex-direction:column; gap:6px; flex-shrink:0;">
                 ${status === "pending" ? `
