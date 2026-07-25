@@ -4907,17 +4907,34 @@ async function syncPatrolData() {
           }
 
           if (json.success) {
-            alert(`✅ ${asins.length}件のASINをセットしました！\n即時解析を開始します（少し時間がかかります）...`);
-
-            // 🌟 手動ドロップ時は待たずに即座にKeepa解析を開始する
+            // 🌟 手動ドロップ時は待たずに即座に、空になるまでKeepa解析→ヤフオク実績確認を繰り返す
             try {
               const researchJobUrl = researcherGasUrl.replace(/\/manager\/?$/, '/research-job');
-              await fetchWithAuth(researchJobUrl + '/keepa', { method: 'POST' });
-              alert('✅ 即時解析が完了しました！リサーチリストを確認してください。');
+
+              let keepaTotal = 0;
+              for (let i = 0; i < 30; i++) {
+                dropLabel.innerHTML = `<i class="fas fa-spinner fa-spin" style="margin-right: 6px; color:#a855f7;"></i> Keepa解析中(${keepaTotal}件完了)...`;
+                const r = await fetchWithAuth(researchJobUrl + '/keepa', { method: 'POST' });
+                const rj = await r.json();
+                if (!rj.processed) break;
+                keepaTotal += rj.processed;
+              }
+
+              let marketTotal = 0;
+              for (let i = 0; i < 50; i++) {
+                dropLabel.innerHTML = `<i class="fas fa-spinner fa-spin" style="margin-right: 6px; color:#a855f7;"></i> ヤフオク確認中(${marketTotal}件完了)...`;
+                const r2 = await fetchWithAuth(researchJobUrl + '/market-check', { method: 'POST' });
+                const rj2 = await r2.json();
+                if (!rj2.processed) break;
+                marketTotal += rj2.processed;
+              }
+
+              alert(`✅ 即時解析が完了しました！\nKeepa: ${keepaTotal}件 / ヤフオク確認: ${marketTotal}件\nリサーチリストを確認してください。`);
             } catch (e2) {
               alert('⚠️ ASIN登録は成功しましたが、即時解析でエラーが出ました。予約時刻または手動実行で解析されます。');
             }
 
+            dropLabel.innerHTML = originalText;
             if (typeof loadResearcherData === 'function') loadResearcherData();
           } else {
             alert(`❌ 自動リサーチ開始エラー:\n${json.message}`);
