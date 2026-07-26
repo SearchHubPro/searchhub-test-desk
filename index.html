@@ -542,6 +542,7 @@
   <div id="view-seller-approved" class="view">
     <div class="content">
       <div style="font-size:12px; color:#718096; margin-bottom:12px;">承認済み(セラーリスト入り)のセラー一覧です。定期的にこのセラーの出品からASINを発見します。</div>
+      <button onclick="enrichSellerNames()" id="btn-enrich-seller" style="width:100%; margin-bottom:12px; padding:10px; background:#805ad5; color:white; border:none; border-radius:8px; font-weight:bold; font-size:12px; cursor:pointer;"><i class="fas fa-magic"></i> セラー名を取得(未取得分のみ)</button>
       <div id="seller-approved-list"></div>
     </div>
   </div>
@@ -5211,6 +5212,38 @@ async function syncPatrolData() {
     // =========================================================
     // セラー一時保管所 / セラーリスト
     // =========================================================
+    // 🌟 セラー名など未取得分を、空になるまで取りに行く
+    async function enrichSellerNames() {
+      const mgrUrl = AppStorage.get("sh_sniper_url", "") || AppStorage.get("sh_tensite_url", "");
+      if (!mgrUrl) { alert("先に⚙️設定でマネージャーAPI URLを入力してください！"); return; }
+
+      const btn = document.getElementById('btn-enrich-seller');
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+
+      let totalUpdated = 0;
+      let tokenOut = false;
+      try {
+        for (let i = 0; i < 30; i++) {
+          btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> 取得中(${totalUpdated}件)...`;
+          const res = await fetchWithAuth(mgrUrl, { method: "POST", body: JSON.stringify({ command: "enrichSellerNames" }) });
+          const result = await res.json();
+          if (!result.success) { alert("失敗しました: " + (result.message || "不明なエラー")); break; }
+          totalUpdated += result.updated || 0;
+          if (result.tokenOut) { tokenOut = true; break; }
+          if (!result.remaining) break;
+        }
+        const note = tokenOut ? "\n⚠️ トークン残量が少なくなったため中断しました。しばらくしてからもう一度押してください。" : "";
+        alert(`✅ ${totalUpdated}件のセラー名を取得しました。${note}`);
+        loadSellerCandidates('approved');
+      } catch (e) {
+        alert("通信エラーが発生しました");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    }
+
     async function loadSellerCandidates(status) {
       const containerId = status === "approved" ? "seller-approved-list" : "seller-pending-list";
       const container = document.getElementById(containerId);
