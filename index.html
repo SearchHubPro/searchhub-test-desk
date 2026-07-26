@@ -957,6 +957,7 @@
   </div>
 
   <div id="view-sniper" class="view">
+    <button onclick="startPatrolNow()" style="width:100%; padding:10px; margin-bottom:10px; background:#e53e3e; color:white; border:none; border-radius:8px; font-weight:bold; font-size:12px; cursor:pointer;"><i class="fas fa-play"></i> 巡回を今すぐ開始</button>
     <div class="tabs-container">
       <div class="tabs" id="sniper-tabs">
         <button class="tab-btn active" id="btn-sniper-mercari" onclick="switchTab('sniper-mercari', this, 'view-sniper')">メルカリ<span class="tab-dot"></span></button>
@@ -972,6 +973,7 @@
   </div>
 
   <div id="view-watcher" class="view">
+    <button onclick="startPatrolNow()" style="width:100%; padding:10px; margin-bottom:10px; background:#e53e3e; color:white; border:none; border-radius:8px; font-weight:bold; font-size:12px; cursor:pointer;"><i class="fas fa-play"></i> 巡回を今すぐ開始</button>
     <div class="tabs-container">
       <div class="tabs" id="watcher-tabs">
         <button class="tab-btn active" id="btn-watcher-mercari" onclick="switchTab('watcher-mercari', this, 'view-watcher')">メルカリ<span class="tab-dot"></span></button>
@@ -4921,6 +4923,23 @@ async function syncPatrolData() {
     }
 
     // 🌟 「続きを実行」ボタン用(新規ASIN登録なしで、残ってる分の処理だけ進める)
+    // 🌟 巡回を今すぐ開始(ウォッチャー/スナイパー共通、拡張機能が/patrol/flagで検知する)
+    async function startPatrolNow() {
+      const mgrUrl = AppStorage.get("sh_sniper_url", "") || AppStorage.get("sh_tensite_url", "");
+      if (!mgrUrl) { alert("先に⚙️設定でマネージャーAPI URLを入力してください！"); return; }
+      try {
+        const res = await fetchWithAuth(mgrUrl, { method: "POST", body: JSON.stringify({ command: "startPatrolNow" }) });
+        const result = await res.json();
+        if (result.success) {
+          alert("✅ 巡回を開始しました！拡張機能が数十秒以内に検知して動き出します。");
+        } else {
+          alert("失敗しました: " + (result.message || "不明なエラー"));
+        }
+      } catch (e) {
+        alert("通信エラーが発生しました");
+      }
+    }
+
     async function continueResearchPipeline() {
       const btn = document.getElementById('btn-continue-research');
       const originalText = btn.innerHTML;
