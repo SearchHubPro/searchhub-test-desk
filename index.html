@@ -894,9 +894,14 @@
     <div class="content">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
         <span style="font-size:12px; font-weight:bold; color:#4a5568;" id="purchaseListCount">待機中...</span>
-        <button onclick="loadPurchaseListData()" style="background:#dd6b20; color:white; border:none; padding:6px 12px; border-radius:6px; font-size:11px; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
-          <i class="fas fa-sync-alt"></i> データを取得
-        </button>
+        <div style="display:flex; gap:6px;">
+          <button onclick="enrichInventoryImages()" id="btn-enrich-img" style="background:#805ad5; color:white; border:none; padding:6px 12px; border-radius:6px; font-size:11px; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+            <i class="fas fa-image"></i> 画像を取得
+          </button>
+          <button onclick="loadPurchaseListData()" style="background:#dd6b20; color:white; border:none; padding:6px 12px; border-radius:6px; font-size:11px; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+            <i class="fas fa-sync-alt"></i> データを取得
+          </button>
+        </div>
       </div>
 
       <div class="search-box" style="margin-bottom:16px;">
@@ -5213,6 +5218,38 @@ async function syncPatrolData() {
     // セラー一時保管所 / セラーリスト
     // =========================================================
     // 🌟 セラー名など未取得分を、空になるまで取りに行く
+    // 🌟 仕入れリストの画像URL(壊れたws-na.amazon-adsystem.com分含む)を、空になるまでKeepaから取り直す
+    async function enrichInventoryImages() {
+      const mgrUrl = AppStorage.get("sh_sniper_url", "") || AppStorage.get("sh_tensite_url", "");
+      if (!mgrUrl) { alert("先に⚙️設定でマネージャーAPI URLを入力してください！"); return; }
+
+      const btn = document.getElementById('btn-enrich-img');
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+
+      let totalUpdated = 0;
+      let tokenOut = false;
+      try {
+        for (let i = 0; i < 30; i++) {
+          btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> 取得中(${totalUpdated}件)...`;
+          const res = await fetchWithAuth(mgrUrl, { method: "POST", body: JSON.stringify({ command: "enrichInventoryImages" }) });
+          const result = await res.json();
+          if (!result.success) { alert("失敗しました: " + (result.message || "不明なエラー")); break; }
+          totalUpdated += result.updated || 0;
+          if (result.tokenOut) { tokenOut = true; break; }
+          if (!result.remaining) break;
+        }
+        const note = tokenOut ? "\n⚠️ トークン残量が少なくなったため中断しました。しばらくしてからもう一度押してください。" : "";
+        alert(`✅ ${totalUpdated}件の画像を取得しました。${note}`);
+        loadPurchaseListData();
+      } catch (e) {
+        alert("通信エラーが発生しました");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    }
+
     async function enrichSellerNames() {
       const mgrUrl = AppStorage.get("sh_sniper_url", "") || AppStorage.get("sh_tensite_url", "");
       if (!mgrUrl) { alert("先に⚙️設定でマネージャーAPI URLを入力してください！"); return; }
