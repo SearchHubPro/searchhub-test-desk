@@ -4942,7 +4942,7 @@ async function syncPatrolData() {
         const syncRes = await fetchWithAuth(mgrUrl, { method: "POST", body: JSON.stringify({ command: "syncPatrolTargets", scope }) });
         const syncResult = await syncRes.json();
 
-        const res = await fetchWithAuth(mgrUrl, { method: "POST", body: JSON.stringify({ command: "startPatrolNow" }) });
+        const res = await fetchWithAuth(mgrUrl, { method: "POST", body: JSON.stringify({ command: "startPatrolNow", scope }) });
         const result = await res.json();
         if (result.success) {
           const createdNote = syncResult.created ? `\n(新たに${syncResult.created}件の検索URLを作成しました)` : '';
@@ -5068,6 +5068,7 @@ async function syncPatrolData() {
       { key: "sniper_sync-1",     task_type: "sniper_sync",            slot_no: 1, label: "🎯 検索URL同期（スナイパー）",                     defaultHour: 2,  defaultEnabled: false },
       { key: "watcher_patrol-1",  task_type: "watcher_patrol",         slot_no: 1, label: "🚀 自動巡回（1回目）",                             defaultHour: 6,  defaultEnabled: false },
       { key: "watcher_patrol-2",  task_type: "watcher_patrol",         slot_no: 2, label: "🚀 自動巡回（2回目）",                             defaultHour: 17, defaultEnabled: false },
+      { key: "sniper_daily_clear-1", task_type: "sniper_daily_clear",  slot_no: 1, label: "🌙 スナイパー巡回結果クリア(深夜)",                defaultHour: 4,  defaultEnabled: true },
       { key: "manager_price_revision-1", task_type: "manager_price_revision", slot_no: 1, label: "💰 価格改定を自動実行",                    defaultHour: 0,  defaultEnabled: false },
       { key: "manager_sync-1",    task_type: "manager_sync",           slot_no: 1, label: "📊 仕入れ・販売同期",                             defaultHour: 1,  defaultEnabled: true },
     ];
@@ -5093,6 +5094,7 @@ async function syncPatrolData() {
       const groupHeaderBefore = {
         "research-1": "SearchHub Researcher",
         "watcher_patrol-1": "SearchHub Watcher",
+        "sniper_daily_clear-1": "SearchHub Sniper",
         "manager_price_revision-1": "SearchHub Manager",
       };
       container.innerHTML = ALL_SCHEDULE_TASKS.map((t) => {
