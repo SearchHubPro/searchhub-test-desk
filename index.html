@@ -2691,6 +2691,8 @@ async function syncPatrolData() {
         }
 
         window.calcSimProfit = function(id, cost, fbaFee, feePercent) {
+          cost = Number(cost) || 0;
+          fbaFee = Number(fbaFee) || 0;
           const actualFeePercent = feePercent || 10; 
           const priceInput = document.getElementById('sim_price_' + id); 
           const profitSpan = document.getElementById('sim_profit_' + id);
