@@ -1175,7 +1175,10 @@
         <select id="monthly-purchase-selector" onchange="renderMonthlyData()" style="padding:8px; border-radius:6px; border:1px solid #cbd5e0; font-weight:bold; font-size:14px; outline:none; background:#fff; color:#1a365d; min-width: 140px;">
           <option>読込中...</option>
         </select>
-        <button onclick="loadMonthlyData()" style="background:#1a365d; color:white; border:none; padding:6px 12px; border-radius:6px; font-size:11px; font-weight:bold;"><i class="fas fa-sync-alt"></i> 更新</button>
+        <div style="display:flex; gap:8px;">
+          <button onclick="enrichLedgerImages()" id="btn-enrich-ledger-img-p" style="background:#805ad5; color:white; border:none; padding:6px 12px; border-radius:6px; font-size:11px; font-weight:bold;"><i class="fas fa-image"></i> 既存データの画像を取得</button>
+          <button onclick="loadMonthlyData()" style="background:#1a365d; color:white; border:none; padding:6px 12px; border-radius:6px; font-size:11px; font-weight:bold;"><i class="fas fa-sync-alt"></i> 更新</button>
+        </div>
       </div>
       <div id="monthly-purchase-summary" style="margin-bottom:16px;"></div>
       <input type="text" id="monthly-purchase-search-kw" class="search-bar-only" placeholder="ASIN・商品名・注文番号で検索..." oninput="monthlyCurrentPage=1; renderMonthlyList();">
@@ -1208,7 +1211,10 @@
         <select id="monthly-sales-selector" onchange="renderMonthlyData()" style="padding:8px; border-radius:6px; border:1px solid #cbd5e0; font-weight:bold; font-size:14px; outline:none; background:#fff; color:#1a365d; min-width: 140px;">
           <option>読込中...</option>
         </select>
-        <button onclick="loadMonthlyData()" style="background:#1a365d; color:white; border:none; padding:6px 12px; border-radius:6px; font-size:11px; font-weight:bold;"><i class="fas fa-sync-alt"></i> 更新</button>
+        <div style="display:flex; gap:8px;">
+          <button onclick="enrichLedgerImages()" id="btn-enrich-ledger-img-s" style="background:#805ad5; color:white; border:none; padding:6px 12px; border-radius:6px; font-size:11px; font-weight:bold;"><i class="fas fa-image"></i> 既存データの画像を取得</button>
+          <button onclick="loadMonthlyData()" style="background:#1a365d; color:white; border:none; padding:6px 12px; border-radius:6px; font-size:11px; font-weight:bold;"><i class="fas fa-sync-alt"></i> 更新</button>
+        </div>
       </div>
       <div id="monthly-sales-summary" style="margin-bottom:16px;"></div>
       <input type="text" id="monthly-sales-search-kw" class="search-bar-only" placeholder="ASIN・商品名・注文番号で検索..." oninput="monthlyCurrentPage=1; renderMonthlyList();">
@@ -5413,11 +5419,11 @@ async function syncPatrolData() {
     // 🌟 セラー名など未取得分を、空になるまで取りに行く
     // 🌟 仕入れリストの画像URL(壊れたws-na.amazon-adsystem.com分含む)を、空になるまでKeepaから取り直す
     // 🌟 販売管理(sales_ledger)の既存データに画像URLが無い分を、空になるまでKeepaから取得する
-    async function enrichLedgerImages() {
+    async function enrichLedgerImages(evt) {
       const mgrUrl = AppStorage.get("sh_sniper_url", "") || AppStorage.get("sh_tensite_url", "");
       if (!mgrUrl) { alert("先に⚙️設定でライセンスキーを入力してください！"); return; }
 
-      const btn = document.getElementById('btn-enrich-ledger-img');
+      const btn = (evt && evt.currentTarget) || event.currentTarget;
       const originalText = btn.innerHTML;
       btn.disabled = true;
 
@@ -5435,7 +5441,8 @@ async function syncPatrolData() {
         }
         const note = tokenOut ? "\n⚠️ トークン残量が少なくなったため中断しました。しばらくしてからもう一度押してください。" : "";
         alert(`✅ ${totalUpdated}件の画像を取得しました。${note}`);
-        loadLedgerData();
+        if (typeof loadLedgerData === 'function' && document.getElementById('view-ledger')?.classList.contains('active')) loadLedgerData();
+        if (typeof loadMonthlyData === 'function' && (currentActiveView === 'view-monthly-purchase' || currentActiveView === 'view-monthly-sales')) loadMonthlyData();
       } catch (e) {
         alert("通信エラーが発生しました");
       } finally {
