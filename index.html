@@ -4879,6 +4879,7 @@ async function syncPatrolData() {
           if (labelEl) labelEl.innerHTML = `<i class="fas fa-spinner fa-spin" style="margin-right: 6px; color:#a855f7;"></i> Keepa解析中(${keepaTotal}件完了)...`;
           const r = await fetchWithAuth(researchJobUrl + '/keepa', { method: 'POST' });
           const rj = await r.json();
+          if (rj.gated) { tokenOut = true; break; }
           if (!rj.processed) break;
           keepaTotal += rj.processed;
           if (typeof rj.tokensLeft === 'number' && rj.tokensLeft < 20) { tokenOut = true; break; }
@@ -4900,6 +4901,7 @@ async function syncPatrolData() {
             const r3 = await fetchWithAuth(researchJobUrl + '/seller', { method: 'POST' });
             const rj3 = await r3.json();
             if (!rj3.success) break;
+            if (rj3.gated) { tokenOut = true; break; }
             sellerExtracted += rj3.extracted || 0;
             sellerNewAsins += rj3.newAsinsFound || 0;
             if (rj3.tokenExhausted) { tokenOut = true; break; }
