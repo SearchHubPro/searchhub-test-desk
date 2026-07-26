@@ -709,6 +709,9 @@
         </div>
 
         <div style="display:flex; gap:8px; align-items:center;">
+          <button onclick="enrichLedgerImages()" id="btn-enrich-ledger-img" style="background:#805ad5; color:white; border:none; padding:6px 12px; border-radius:6px; font-size:11px; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+            <i class="fas fa-image"></i> 既存データの画像を取得
+          </button>
           <button onclick="openCsvExportModal()" style="background:#38a169; color:white; border:none; padding:6px 12px; border-radius:6px; font-size:11px; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
             <i class="fas fa-file-csv"></i> CSV出力
           </button>
@@ -5409,6 +5412,38 @@ async function syncPatrolData() {
     // =========================================================
     // 🌟 セラー名など未取得分を、空になるまで取りに行く
     // 🌟 仕入れリストの画像URL(壊れたws-na.amazon-adsystem.com分含む)を、空になるまでKeepaから取り直す
+    // 🌟 販売管理(sales_ledger)の既存データに画像URLが無い分を、空になるまでKeepaから取得する
+    async function enrichLedgerImages() {
+      const mgrUrl = AppStorage.get("sh_sniper_url", "") || AppStorage.get("sh_tensite_url", "");
+      if (!mgrUrl) { alert("先に⚙️設定でライセンスキーを入力してください！"); return; }
+
+      const btn = document.getElementById('btn-enrich-ledger-img');
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+
+      let totalUpdated = 0;
+      let tokenOut = false;
+      try {
+        for (let i = 0; i < 30; i++) {
+          btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> 取得中(${totalUpdated}件)...`;
+          const res = await fetchWithAuth(mgrUrl, { method: "POST", body: JSON.stringify({ command: "enrichLedgerImages" }) });
+          const result = await res.json();
+          if (!result.success) { alert("失敗しました: " + (result.message || "不明なエラー")); break; }
+          totalUpdated += result.updated || 0;
+          if (result.tokenOut) { tokenOut = true; break; }
+          if (!result.remaining) break;
+        }
+        const note = tokenOut ? "\n⚠️ トークン残量が少なくなったため中断しました。しばらくしてからもう一度押してください。" : "";
+        alert(`✅ ${totalUpdated}件の画像を取得しました。${note}`);
+        loadLedgerData();
+      } catch (e) {
+        alert("通信エラーが発生しました");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    }
+
     async function enrichInventoryImages() {
       const mgrUrl = AppStorage.get("sh_sniper_url", "") || AppStorage.get("sh_tensite_url", "");
       if (!mgrUrl) { alert("先に⚙️設定でマネージャーAPI URLを入力してください！"); return; }
