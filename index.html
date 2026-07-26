@@ -4052,7 +4052,8 @@ async function syncPatrolData() {
         filtered = globalPurchaseListData.filter(item => 
           (item.title && item.title.toLowerCase().includes(kw)) || 
           (item.asin && item.asin.toLowerCase().includes(kw)) ||
-          (item.id && String(item.id).toLowerCase().includes(kw))
+          (item.id && String(item.id).toLowerCase().includes(kw)) ||
+          (item.no != null && String(item.no).toLowerCase().includes(kw))
         );
       }
 
@@ -4066,6 +4067,7 @@ async function syncPatrolData() {
       let html = "";
       filtered.forEach((item) => {
         const id = escapeHtml(item.id || '---'); 
+        const displayNo = item.no != null ? item.no : '---';
         const title = escapeHtml(item.title || '商品名なし'); 
         const asin = escapeHtml(item.asin || '---'); 
         const model = escapeHtml(item.model || '---'); 
@@ -4117,7 +4119,7 @@ async function syncPatrolData() {
               <span style="font-family:monospace; background:#fffaf0; color:#dd6b20; border:1px solid #fbd38d; padding:2px 6px; border-radius:4px; font-size:12px; font-weight:bold;">${asin}</span>
               <span style="font-size:12px; color:#4a5568; font-weight:bold;">型番: ${model}</span>
             </div>
-            <div style="font-size:13px; color:#2d3748; font-weight:900; margin-top:8px; font-family:monospace;">ID: ${id}</div>
+            <div style="font-size:13px; color:#2d3748; font-weight:900; margin-top:8px; font-family:monospace;">ID: ${displayNo}</div>
           </td>
 
           <td style="text-align: center; vertical-align: middle;">
