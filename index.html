@@ -709,6 +709,9 @@
         </div>
 
         <div style="display:flex; gap:8px; align-items:center;">
+          <button onclick="openCsvExportModal()" style="background:#38a169; color:white; border:none; padding:6px 12px; border-radius:6px; font-size:11px; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+            <i class="fas fa-file-csv"></i> CSV出力
+          </button>
           <button onclick="loadLedgerData()" style="background:#1a365d; color:white; border:none; padding:6px 12px; border-radius:6px; font-size:11px; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
             <i class="fas fa-sync-alt"></i> 最新を取得
           </button>
@@ -716,6 +719,31 @@
         </div>
         
       </div> 
+
+      <div id="csvExportModal" class="modal">
+        <div class="modal-content">
+          <h3 style="margin-top:0; border-bottom:2px solid #e2e8f0; padding-bottom:8px;"><i class="fas fa-file-csv"></i> 帳簿データをCSV出力</h3>
+          <div style="font-size:12px; color:#718096; margin-bottom:12px;" id="csv_exportCount"></div>
+
+          <label style="font-size:12px; font-weight:bold; color:#4a5568;">対象月</label>
+          <select id="csv_exportMonth" style="width:100%; padding:8px; margin-bottom:12px; border:1px solid #cbd5e0; border-radius:6px; font-size:13px;"></select>
+
+          <label style="font-size:12px; font-weight:bold; color:#4a5568;">ステータス</label>
+          <select id="csv_exportStatus" style="width:100%; padding:8px; margin-bottom:16px; border:1px solid #cbd5e0; border-radius:6px; font-size:13px;">
+            <option value="ALL">すべて</option>
+            <option value="納品待ち">納品待ち</option>
+            <option value="出品中">出品中</option>
+            <option value="販売済">販売済</option>
+            <option value="返金済み">返金済み</option>
+            <option value="補填済み">補填済み</option>
+          </select>
+
+          <div class="modal-actions">
+            <button style="background:#e2e8f0; color:#4a5568;" onclick="document.getElementById('csvExportModal').style.display='none';">閉じる</button>
+            <button style="background:#38a169; color:white;" onclick="executeCsvExport()">この内容で出力</button>
+          </div>
+        </div>
+      </div>
 
       <div class="search-box" style="margin-bottom:16px;">
         <input type="text" id="ledger-search-kw" placeholder="SKU・ASIN・商品名・仕入先で検索..." oninput="ledgerCurrentPage=1; renderLedgerList();" style="flex:2;">
@@ -3296,6 +3324,106 @@ async function syncPatrolData() {
         // ==========================================
         let globalLedgerData = [];
         let ledgerCurrentPage = 1;
+
+        // 📤 帳簿データのCSV出力
+        // 💡 ステータスに応じて「その月の帳簿」判定に使う日付を切り替える
+        // 納品待ち・出品中 → 仕入日基準／販売済・返金済み・補填済み → 販売日基準
+        function getRelevantDateForItem(item) {
+          const isSold = (item.status === '販売済' || item.status === '返金済み' || item.status === '補填済み');
+          return isSold ? item.sellDate : item.buyDate;
+        }
+
+        function openCsvExportModal() {
+          if (!globalLedgerData || globalLedgerData.length === 0) {
+            alert("⚠️ 先に帳簿データを読み込んでください！（最新を取得ボタンを押してから開いてください）");
+            return;
+          }
+          const monthSet = new Set();
+          globalLedgerData.forEach(item => {
+            const d = getRelevantDateForItem(item);
+            if (d) {
+              const m = String(d).replace(/-/g, '/').substring(0, 7); // yyyy/MM
+              if (m) monthSet.add(m);
+            }
+          });
+          const monthArr = Array.from(monthSet).sort().reverse();
+          const sel = document.getElementById('csv_exportMonth');
+          sel.innerHTML = '<option value="ALL">すべての月</option>';
+          monthArr.forEach(m => { sel.innerHTML += `<option value="${m}">${m}</option>`; });
+
+          document.getElementById('csv_exportCount').innerText = `帳簿全体: ${globalLedgerData.length}件（未販売は仕入日、販売済み系は販売日で月判定）`;
+          document.getElementById('csvExportModal').style.display = 'flex';
+        }
+
+        function csvEscape(val) {
+          if (val === null || val === undefined) return '';
+          const s = String(val);
+          if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+            return '"' + s.replace(/"/g, '""') + '"';
+          }
+          return s;
+        }
+
+        function executeCsvExport() {
+          const targetMonth = document.getElementById('csv_exportMonth').value;
+          const targetStatus = document.getElementById('csv_exportStatus').value;
+
+          let filtered = globalLedgerData.filter(item => {
+            const relevantDate = getRelevantDateForItem(item);
+            const matchMonth = (targetMonth === 'ALL') || (relevantDate && String(relevantDate).replace(/-/g, '/').substring(0, 7) === targetMonth);
+            const matchStatus = (targetStatus === 'ALL') || (item.status === targetStatus);
+            return matchMonth && matchStatus;
+          });
+
+          if (filtered.length === 0) {
+            alert("⚠️ 条件に合うデータがありません。");
+            return;
+          }
+
+          const headers = ['No', '仕入日', '仕入先', 'URL', '商品ID', 'ASIN', '商品名', '型番', 'SKU', 'コンディション', '商品説明', '仕入値', '送料経費', '販売予定価格', '販売日', '注文番号', '売上額', '配送料', '手数料', '利益', 'ステータス'];
+          const rows = [headers];
+
+          filtered.forEach(item => {
+            rows.push([
+              item.no || '',
+              item.buyDate || '',
+              item.supplier || '',
+              item.url || '',
+              item.itemId || '',
+              item.asin || '',
+              item.title || '',
+              item.model || '',
+              item.sku || '',
+              item.condition || '',
+              item.description || '',
+              item.buyPrice || 0,
+              item.expense || 0,
+              item.estPrice || 0,
+              item.sellDate || '',
+              item.orderNum || '',
+              item.sales || 0,
+              item.shipping || 0,
+              item.fee || 0,
+              item.profit || 0,
+              item.status || ''
+            ]);
+          });
+
+          const csvContent = rows.map(r => r.map(csvEscape).join(',')).join('\r\n');
+          const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          const monthLabel = targetMonth === 'ALL' ? 'すべて' : targetMonth.replace('/', '-');
+          const statusLabel = targetStatus === 'ALL' ? 'すべて' : targetStatus;
+          a.download = `帳簿_${monthLabel}_${statusLabel}.csv`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+
+          document.getElementById('csvExportModal').style.display = 'none';
+        }
 
         async function loadLedgerData() {
           const resDiv = document.getElementById('ledgerResult');
