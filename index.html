@@ -320,7 +320,6 @@
     <div class="header-left">
       <button class="header-btn" id="backBtn" style="display:none;" onclick="goBackScreen()"><i class="fas fa-chevron-left"></i></button>
       <button class="header-btn" style="position:relative; z-index:9999;" onclick="openConfig()"><i class="fas fa-cog"></i></button>
-      <button class="header-btn discord-btn discord-off" id="dcToggleBtn" onclick="toggleDiscord()"><i class="fab fa-discord"></i></button>
     </div>
     <div class="header-center">
       <img id="headerLogo" src="https://i.ibb.co/1f3CYVjV/2026-06-04-111628.png" style="height: 28px; display: block; margin: 0 auto; object-fit: contain;">
@@ -330,7 +329,7 @@
         <div class="last-update" id="lastUpdate">待機中...</div>
       </div>
     </div>
-    <div class="header-right"></div>
+    <div class="header-right"><button id="patrolStartHeaderBtn" style="display:none; background:#e53e3e; color:white; border:none; border-radius:6px; padding:8px 12px; font-weight:bold; font-size:11px; cursor:pointer;" onclick="startPatrolNow()"><i class="fas fa-play"></i> 巡回開始</button></div>
   </div>
 </div>
 
@@ -957,9 +956,7 @@
   </div>
 
   <div id="view-sniper" class="view">
-    <div style="padding:12px 12px 0 12px; box-sizing:border-box;">
-      <button onclick="startPatrolNow()" style="display:block; width:100%; min-height:44px; padding:12px; margin-bottom:0; background:#e53e3e; color:white; border:none; border-radius:8px; font-weight:bold; font-size:14px; line-height:1.4; cursor:pointer; box-sizing:border-box;"><i class="fas fa-play"></i> 巡回を今すぐ開始</button>
-    </div>
+    
     <div class="tabs-container">
       <div class="tabs" id="sniper-tabs">
         <button class="tab-btn active" id="btn-sniper-mercari" onclick="switchTab('sniper-mercari', this, 'view-sniper')">メルカリ<span class="tab-dot"></span></button>
@@ -975,9 +972,7 @@
   </div>
 
   <div id="view-watcher" class="view">
-    <div style="padding:12px 12px 0 12px; box-sizing:border-box;">
-      <button onclick="startPatrolNow()" style="display:block; width:100%; min-height:44px; padding:12px; margin-bottom:0; background:#e53e3e; color:white; border:none; border-radius:8px; font-weight:bold; font-size:14px; line-height:1.4; cursor:pointer; box-sizing:border-box;"><i class="fas fa-play"></i> 巡回を今すぐ開始</button>
-    </div>
+    
     <div class="tabs-container">
       <div class="tabs" id="watcher-tabs">
         <button class="tab-btn active" id="btn-watcher-mercari" onclick="switchTab('watcher-mercari', this, 'view-watcher')">メルカリ<span class="tab-dot"></span></button>
@@ -1898,6 +1893,12 @@
         else if(viewId === 'view-monthly-sales') titleEl.innerText = '月別販売情報';
         else if(viewId === 'view-expense') titleEl.innerText = '経費一覧';
       }
+
+      // 🌟 巡回開始ボタンはウォッチャー/スナイパー画面の時だけヘッダー右上に表示
+      const patrolBtn = document.getElementById('patrolStartHeaderBtn');
+      if (patrolBtn) {
+        patrolBtn.style.display = (viewId === 'view-watcher' || viewId === 'view-sniper') ? 'flex' : 'none';
+      }
       
       // ーーー この下は元からあるコードそのまま ーーー
       if (viewId === 'view-bulk-register') {
@@ -2144,6 +2145,7 @@ async function syncPatrolData() {
         
         function updateDiscordBtnUI(status) {
           const btn = document.getElementById("dcToggleBtn");
+          if (!btn) return;
           btn.className = status === "on" ? "header-btn discord-btn discord-on" : "header-btn discord-btn discord-off";
         }
         
