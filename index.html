@@ -957,7 +957,9 @@
   </div>
 
   <div id="view-sniper" class="view">
-    <button onclick="startPatrolNow()" style="width:100%; padding:10px; margin-bottom:10px; background:#e53e3e; color:white; border:none; border-radius:8px; font-weight:bold; font-size:12px; cursor:pointer;"><i class="fas fa-play"></i> 巡回を今すぐ開始</button>
+    <div style="padding:12px 12px 0 12px; box-sizing:border-box;">
+      <button onclick="startPatrolNow()" style="display:block; width:100%; min-height:44px; padding:12px; margin-bottom:0; background:#e53e3e; color:white; border:none; border-radius:8px; font-weight:bold; font-size:14px; line-height:1.4; cursor:pointer; box-sizing:border-box;"><i class="fas fa-play"></i> 巡回を今すぐ開始</button>
+    </div>
     <div class="tabs-container">
       <div class="tabs" id="sniper-tabs">
         <button class="tab-btn active" id="btn-sniper-mercari" onclick="switchTab('sniper-mercari', this, 'view-sniper')">メルカリ<span class="tab-dot"></span></button>
@@ -973,7 +975,9 @@
   </div>
 
   <div id="view-watcher" class="view">
-    <button onclick="startPatrolNow()" style="width:100%; padding:10px; margin-bottom:10px; background:#e53e3e; color:white; border:none; border-radius:8px; font-weight:bold; font-size:12px; cursor:pointer;"><i class="fas fa-play"></i> 巡回を今すぐ開始</button>
+    <div style="padding:12px 12px 0 12px; box-sizing:border-box;">
+      <button onclick="startPatrolNow()" style="display:block; width:100%; min-height:44px; padding:12px; margin-bottom:0; background:#e53e3e; color:white; border:none; border-radius:8px; font-weight:bold; font-size:14px; line-height:1.4; cursor:pointer; box-sizing:border-box;"><i class="fas fa-play"></i> 巡回を今すぐ開始</button>
+    </div>
     <div class="tabs-container">
       <div class="tabs" id="watcher-tabs">
         <button class="tab-btn active" id="btn-watcher-mercari" onclick="switchTab('watcher-mercari', this, 'view-watcher')">メルカリ<span class="tab-dot"></span></button>
@@ -4927,11 +4931,20 @@ async function syncPatrolData() {
     async function startPatrolNow() {
       const mgrUrl = AppStorage.get("sh_sniper_url", "") || AppStorage.get("sh_tensite_url", "");
       if (!mgrUrl) { alert("先に⚙️設定でマネージャーAPI URLを入力してください！"); return; }
+
+      const isSniperView = currentActiveView === 'view-sniper';
+      const scope = isSniperView ? 'sniper' : 'watcher';
+
       try {
+        // 対象URLが無ければ先に同期(初回はこれで検索URLが自動生成される)
+        const syncRes = await fetchWithAuth(mgrUrl, { method: "POST", body: JSON.stringify({ command: "syncPatrolTargets", scope }) });
+        const syncResult = await syncRes.json();
+
         const res = await fetchWithAuth(mgrUrl, { method: "POST", body: JSON.stringify({ command: "startPatrolNow" }) });
         const result = await res.json();
         if (result.success) {
-          alert("✅ 巡回を開始しました！拡張機能が数十秒以内に検知して動き出します。");
+          const createdNote = syncResult.created ? `\n(新たに${syncResult.created}件の検索URLを作成しました)` : '';
+          alert(`✅ 巡回を開始しました！拡張機能が数十秒以内に検知して動き出します。${createdNote}`);
         } else {
           alert("失敗しました: " + (result.message || "不明なエラー"));
         }
