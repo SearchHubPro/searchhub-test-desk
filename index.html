@@ -2054,8 +2054,8 @@ async function syncPatrolData() {
           if(!urlSniper && !url10) return;
           try {
             const fetchPromises = []; const cacheBuster = "&t=" + new Date().getTime();
-            if (urlSniper) fetchPromises.push(fetchWithAuth(urlSniper + "?command=mobileData" + cacheBuster).then(r => r.json()).catch(() => null)); else fetchPromises.push(Promise.resolve(null));
-            if (url10) fetchPromises.push(fetchWithAuth(url10 + "?command=mobileData" + cacheBuster).then(r => r.json()).catch(() => null)); else fetchPromises.push(Promise.resolve(null));
+            if (urlSniper) fetchPromises.push(fetchWithAuth(urlSniper + "?command=mobileData&scope=sniper" + cacheBuster).then(r => r.json()).catch(() => null)); else fetchPromises.push(Promise.resolve(null));
+            if (url10) fetchPromises.push(fetchWithAuth(url10 + "?command=mobileData&scope=watcher" + cacheBuster).then(r => r.json()).catch(() => null)); else fetchPromises.push(Promise.resolve(null));
             const [resSniper, res10] = await Promise.all(fetchPromises);
             hideLoader();
 
