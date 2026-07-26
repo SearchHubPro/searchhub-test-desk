@@ -456,6 +456,11 @@
         <span style="font-size:10px; color:#718096; font-weight:normal; margin-top:4px;">利益商品自動狙撃・即時購入ログ</span>
       </button>
 
+      <button class="dash-btn" onclick="openView('view-progress'); loadPatrolProgress();">
+        <i class="fas fa-chart-line" style="color:#2b6cb0;"></i>巡回進捗パネル
+        <span style="font-size:10px; color:#718096; font-weight:normal; margin-top:4px;">ウォッチャー/スナイパーの進み具合を確認</span>
+      </button>
+
       <button class="dash-btn" onclick="openAllSchedulesModal()">
         <i class="fas fa-clock" style="color:#805ad5;"></i>実行予約
       </button>
@@ -489,6 +494,22 @@
         <button onclick="loadJobLogs()" style="background:#edf2f7; color:#4a5568; border:none; padding:8px 12px; border-radius:6px; font-weight:bold; font-size:11px; cursor:pointer;"><i class="fas fa-sync-alt"></i> 更新</button>
       </div>
       <div id="job-logs-list"></div>
+    </div>
+  </div>
+
+  <div id="view-progress" class="view">
+    <div class="content">
+      <div style="display:flex; gap:8px; margin-bottom:12px;">
+        <button id="progress-tab-watcher" onclick="switchProgressScope('watcher')" style="flex:1; padding:8px; border-radius:6px; border:none; font-weight:bold; font-size:12px; cursor:pointer; background:#07A27B; color:white;">ウォッチャー</button>
+        <button id="progress-tab-sniper" onclick="switchProgressScope('sniper')" style="flex:1; padding:8px; border-radius:6px; border:none; font-weight:bold; font-size:12px; cursor:pointer; background:#edf2f7; color:#4a5568;">スナイパー</button>
+        <button onclick="loadPatrolProgress()" style="padding:8px 12px; border-radius:6px; border:none; font-weight:bold; font-size:11px; cursor:pointer; background:#edf2f7; color:#4a5568;"><i class="fas fa-sync-alt"></i></button>
+      </div>
+
+      <div style="font-size:12px; font-weight:bold; color:#4a5568; margin-bottom:6px;">📊 サイト別進捗(直近6時間の巡回サイクル)</div>
+      <div id="progress-summary" style="margin-bottom:20px;"></div>
+
+      <div style="font-size:12px; font-weight:bold; color:#4a5568; margin-bottom:6px;">📋 直近の活動ログ</div>
+      <div id="progress-activity"></div>
     </div>
   </div>
 
@@ -1888,6 +1909,7 @@
         else if(viewId === 'view-ledger') titleEl.innerText = '販売管理';
         else if(viewId === 'view-bulk-register') titleEl.innerText = '一括商品登録';
         else if(viewId === 'view-info') titleEl.innerText = '各種情報';
+        else if(viewId === 'view-progress') titleEl.innerText = '巡回進捗パネル';
         else if(viewId === 'view-purchase-list') titleEl.innerText = '仕入れリスト';
         else if(viewId === 'view-monthly-purchase') titleEl.innerText = '月別仕入情報';
         else if(viewId === 'view-monthly-sales') titleEl.innerText = '月別販売情報';
@@ -5412,6 +5434,81 @@ async function syncPatrolData() {
       manager_price_revision: "💰 価格改定",
       manager_sync: "📊 仕入れ・販売同期",
     };
+
+    // =========================================================
+    // 巡回進捗パネル
+    // =========================================================
+    let currentProgressScope = 'watcher';
+
+    function switchProgressScope(scope) {
+      currentProgressScope = scope;
+      document.getElementById('progress-tab-watcher').style.background = scope === 'watcher' ? '#07A27B' : '#edf2f7';
+      document.getElementById('progress-tab-watcher').style.color = scope === 'watcher' ? 'white' : '#4a5568';
+      document.getElementById('progress-tab-sniper').style.background = scope === 'sniper' ? '#e53e3e' : '#edf2f7';
+      document.getElementById('progress-tab-sniper').style.color = scope === 'sniper' ? 'white' : '#4a5568';
+      loadPatrolProgress();
+    }
+
+    async function loadPatrolProgress() {
+      const summaryEl = document.getElementById('progress-summary');
+      const activityEl = document.getElementById('progress-activity');
+      summaryEl.innerHTML = '<div style="text-align:center; color:#a0aec0; padding:16px;">読み込み中...</div>';
+      activityEl.innerHTML = '';
+
+      const mgrUrl = AppStorage.get("sh_sniper_url", "") || AppStorage.get("sh_tensite_url", "");
+      if (!mgrUrl) { summaryEl.innerHTML = '<div style="text-align:center; color:#e53e3e; padding:16px;">先に⚙️設定でマネージャーAPI URLを入力してください</div>'; return; }
+
+      try {
+        const res = await fetchWithAuth(mgrUrl, { method: "POST", body: JSON.stringify({ command: "getPatrolProgress", scope: currentProgressScope }) });
+        const result = await res.json();
+        if (!result.success) { summaryEl.innerHTML = '<div style="text-align:center; color:#e53e3e; padding:16px;">取得に失敗しました</div>'; return; }
+
+        const progress = result.progress || {};
+        const siteNames = Object.keys(progress);
+        if (siteNames.length === 0) {
+          summaryEl.innerHTML = '<div style="text-align:center; color:#a0aec0; padding:16px;">対象サイトがまだありません(先に巡回を開始してください)</div>';
+        } else {
+          summaryEl.innerHTML = siteNames.map((site) => {
+            const p = progress[site];
+            const pct = p.total > 0 ? Math.round((p.done / p.total) * 100) : 0;
+            return `
+              <div style="margin-bottom:10px;">
+                <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:bold; color:#4a5568; margin-bottom:4px;">
+                  <span>${escapeHtml(site)}</span>
+                  <span>${p.done} / ${p.total}件</span>
+                </div>
+                <div style="background:#edf2f7; border-radius:6px; height:8px; overflow:hidden;">
+                  <div style="background:${pct >= 100 ? '#38a169' : '#3182ce'}; height:100%; width:${pct}%;"></div>
+                </div>
+              </div>`;
+          }).join("");
+        }
+
+        const activity = result.activity || [];
+        if (activity.length === 0) {
+          activityEl.innerHTML = '<div style="text-align:center; color:#a0aec0; padding:16px;">まだ活動記録がありません</div>';
+        } else {
+          activityEl.innerHTML = activity.map((a) => {
+            const d = new Date(a.checkedAt);
+            const timeStr = isNaN(d.getTime()) ? "" : `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+            const isFound = (a.status || "").includes("あり");
+            return `
+              <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; border-left:3px solid ${isFound ? '#38a169' : '#cbd5e0'}; border-radius:6px; padding:8px 10px; margin-bottom:6px; font-size:12px;">
+                <div style="min-width:0;">
+                  <span style="font-weight:bold; color:#4a5568;">${escapeHtml(a.site)}</span>
+                  <span style="color:#718096; margin-left:6px;">${escapeHtml(a.title || '')}</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+                  <span style="color:${isFound ? '#38a169' : '#a0aec0'}; font-weight:bold;">${escapeHtml(a.status)}</span>
+                  <span style="color:#a0aec0; font-size:11px;">${timeStr}</span>
+                </div>
+              </div>`;
+          }).join("");
+        }
+      } catch (e) {
+        summaryEl.innerHTML = '<div style="text-align:center; color:#e53e3e; padding:16px;">通信エラーが発生しました</div>';
+      }
+    }
 
     async function loadJobLogs() {
       const container = document.getElementById("job-logs-list");
