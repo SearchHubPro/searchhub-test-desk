@@ -4933,12 +4933,14 @@ async function syncPatrolData() {
               const researchJobUrl = researcherGasUrl.replace(/\/manager\/?$/, '/research-job');
 
               let keepaTotal = 0;
+              let tokenOut = false;
               for (let i = 0; i < 30; i++) {
                 dropLabel.innerHTML = `<i class="fas fa-spinner fa-spin" style="margin-right: 6px; color:#a855f7;"></i> Keepa解析中(${keepaTotal}件完了)...`;
                 const r = await fetchWithAuth(researchJobUrl + '/keepa', { method: 'POST' });
                 const rj = await r.json();
                 if (!rj.processed) break;
                 keepaTotal += rj.processed;
+                if (typeof rj.tokensLeft === 'number' && rj.tokensLeft < 20) { tokenOut = true; break; }
               }
 
               let marketTotal = 0;
@@ -4950,13 +4952,22 @@ async function syncPatrolData() {
                 marketTotal += rj2.processed;
               }
 
-              dropLabel.innerHTML = `<i class="fas fa-spinner fa-spin" style="margin-right: 6px; color:#a855f7;"></i> セラー抽出中...`;
               let sellerExtracted = 0, sellerNewAsins = 0;
-              const r3 = await fetchWithAuth(researchJobUrl + '/seller', { method: 'POST' });
-              const rj3 = await r3.json();
-              if (rj3.success) { sellerExtracted = rj3.extracted || 0; sellerNewAsins = rj3.newAsinsFound || 0; }
+              if (!tokenOut) {
+                for (let i = 0; i < 30; i++) {
+                  dropLabel.innerHTML = `<i class="fas fa-spinner fa-spin" style="margin-right: 6px; color:#a855f7;"></i> セラー抽出中(${sellerExtracted}件)...`;
+                  const r3 = await fetchWithAuth(researchJobUrl + '/seller', { method: 'POST' });
+                  const rj3 = await r3.json();
+                  if (!rj3.success) break;
+                  sellerExtracted += rj3.extracted || 0;
+                  sellerNewAsins += rj3.newAsinsFound || 0;
+                  if (rj3.tokenExhausted) { tokenOut = true; break; }
+                  if (!rj3.checkedCount) break; // 今回チェック対象が0件なら終了
+                }
+              }
 
-              alert(`✅ 即時解析が完了しました！\nKeepa: ${keepaTotal}件 / ヤフオク確認: ${marketTotal}件 / セラー抽出: ${sellerExtracted}件(新規ASIN${sellerNewAsins}件)\nリサーチリストを確認してください。`);
+              const tokenNote = tokenOut ? '\n\n⚠️ Keepaのトークン残量が少なくなったため、途中で処理を打ち切りました。しばらく時間を置いてから続きを実行してください。' : '';
+              alert(`✅ 即時解析が完了しました！\nKeepa: ${keepaTotal}件 / ヤフオク確認: ${marketTotal}件 / セラー抽出: ${sellerExtracted}件(新規ASIN${sellerNewAsins}件)\nリサーチリストを確認してください。${tokenNote}`);
             } catch (e2) {
               alert('⚠️ ASIN登録は成功しましたが、即時解析でエラーが出ました。予約時刻または手動実行で解析されます。');
             }
