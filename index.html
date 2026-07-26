@@ -2104,7 +2104,7 @@ async function syncPatrolData() {
                     }
                   }
                   let htmlStr = '<div class="item-title"><a href="' + item.url + '" target="_blank" data-key="' + uniqueKey + '" onclick="markAsRead(this)">💎 ' + escapeHtml(item.title) + '</a></div>' +
-                    '<div class="item-meta"><span class="status-tag">' + escapeHtml(item.status) + '</span><span class="price-tag">' + escapeHtml(item.price) + '</span>' + (dateTimeText ? '<span class="date-tag" style="font-size:11px; color:#a0aec0; margin-left:6px;">' + dateTimeText + '</span>' : '') + '</div>';
+                    '<div class="item-meta"><span>' + '<span class="status-tag">' + escapeHtml(item.status) + '</span>' + (dateTimeText ? ' <span class="date-tag" style="font-size:11px; color:#a0aec0;">' + dateTimeText + '</span>' : '') + '</span>' + '<span class="price-tag">' + escapeHtml(item.price) + '</span></div>';
                   if (item.asin && item.asin !== "undefined") {
                     htmlStr += '<div style="margin-top:10px; border-top:1px dashed #e2e8f0; padding-top:10px;">' +
                       '<button class="auto-asin-btn" data-key="' + uniqueKey + '" onclick="markAsRead(this); openView(\'view-amazon\'); jumpToAmazonResearch(\'' + escapeHtml(item.asin) + '\', \'' + escapeHtml(item.title) + '\')">' +
