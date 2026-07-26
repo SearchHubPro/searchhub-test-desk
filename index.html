@@ -542,7 +542,6 @@
   <div id="view-seller-approved" class="view">
     <div class="content">
       <div style="font-size:12px; color:#718096; margin-bottom:12px;">承認済み(セラーリスト入り)のセラー一覧です。定期的にこのセラーの出品からASINを発見します。</div>
-      <button onclick="enrichSellerNames()" id="btn-enrich-seller" style="width:100%; margin-bottom:12px; padding:10px; background:#805ad5; color:white; border:none; border-radius:8px; font-weight:bold; font-size:12px; cursor:pointer;"><i class="fas fa-magic"></i> セラー名を取得(未取得分のみ)</button>
       <div id="seller-approved-list"></div>
     </div>
   </div>
@@ -558,9 +557,6 @@
 
       <div id="rpanel-general" class="rsetting-panel" style="display:block;">
         <div style="background:#f7fafc; border-radius:12px; padding:16px;">
-          <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;">🔑 Keepa APIキー</label>
-          <input type="text" id="rs-keepaApiKey" style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #cbd5e0; border-radius:6px; font-size:13px; margin-bottom:12px;">
-
           <label style="font-size:12px; font-weight:bold; display:block; margin-bottom:4px;">💰 目標利益率 (%)</label>
           <input type="number" id="rs-profitMargin" style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #cbd5e0; border-radius:6px; font-size:13px; margin-bottom:12px;">
 
@@ -662,11 +658,6 @@
 
   <div id="view-manager-settings" class="view">
     <div class="content">
-      <div style="display:flex; gap:8px; margin-bottom:16px;">
-        <button id="tab-btn-info" onclick="switchSettingTab('info')" style="flex:1; padding:10px; border:none; border-radius:8px; background:#1a365d; color:white; font-weight:bold; font-size:12px; cursor:pointer;">📋 情報設定</button>
-        <button id="tab-btn-system" onclick="switchSettingTab('system')" style="flex:1; padding:10px; border:none; border-radius:8px; background:#edf2f7; color:#4a5568; font-weight:bold; font-size:12px; cursor:pointer;">🔑 API設定</button>
-      </div>
-
       <div id="panel-setting-info" class="setting-panel" style="display:block;">
         <div style="background:#f7fafc; border-radius:12px; padding:16px; margin-bottom:16px;">
           <label style="font-size:12px; font-weight:bold; color:#4a5568; display:block; margin-bottom:6px;">仕入先リスト（1行に1つ）</label>
@@ -691,22 +682,6 @@
         </div>
 
         <button onclick="saveInfoSettingsView()" style="width:100%; padding:14px; border:none; border-radius:8px; background:#1a365d; color:#fff; font-weight:bold; font-size:14px; cursor:pointer;">この内容で保存</button>
-      </div>
-
-      <div id="panel-setting-system" class="setting-panel" style="display:none;">
-        <div style="background:#f7fafc; border-radius:12px; padding:16px; margin-bottom:16px;">
-          <label style="font-size:12px; font-weight:bold; color:#4a5568; display:block; margin-bottom:6px;">🔑 Keepa APIキー</label>
-          <input type="text" id="gas-setting-apikey" style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #cbd5e0; border-radius:6px; font-size:13px;" placeholder="あなたのKeepaAPIキー">
-
-          <label style="font-size:12px; font-weight:bold; color:#4a5568; display:block; margin:12px 0 6px;">🛒 AmazonセラーID</label>
-          <input type="text" id="gas-setting-sellerid" style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #cbd5e0; border-radius:6px; font-size:13px;" placeholder="例: A1234567890XYZ">
-
-          <div style="display:none;">
-            <input type="text" id="gas-setting-sheeturl" value="supabase">
-            <input type="text" id="gas-setting-serial" value="supabase">
-          </div>
-        </div>
-        <button id="btn-save-gas-settings" onclick="saveGasSettings()" style="width:100%; padding:14px; border:none; border-radius:8px; background:#1a365d; color:#fff; font-weight:bold; font-size:14px; cursor:pointer;">保存する</button>
       </div>
 
     </div>
@@ -895,9 +870,6 @@
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
         <span style="font-size:12px; font-weight:bold; color:#4a5568;" id="purchaseListCount">待機中...</span>
         <div style="display:flex; gap:6px;">
-          <button onclick="enrichInventoryImages()" id="btn-enrich-img" style="background:#805ad5; color:white; border:none; padding:6px 12px; border-radius:6px; font-size:11px; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
-            <i class="fas fa-image"></i> 画像を取得
-          </button>
           <button onclick="loadPurchaseListData()" style="background:#dd6b20; color:white; border:none; padding:6px 12px; border-radius:6px; font-size:11px; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
             <i class="fas fa-sync-alt"></i> データを取得
           </button>
@@ -1321,23 +1293,15 @@
     <div class="modal-content">
       <h3 style="margin-bottom:12px;">⚙️ アプリ基本設定</h3>
 
-      <label style="color:#d9534f;">Supabase APIキー(必須)</label>
-      <input type="text" id="cfgSupabaseKey" placeholder="発行されたAPIキーを貼り付け">
+      <label style="color:#d9534f;">ライセンスキー(必須)</label>
+      <input type="text" id="cfgSupabaseKey" placeholder="発行されたライセンスキーを貼り付け">
 
-      <label>Keepa APIキー</label>
+      <label style="color:#d9534f;">Keepa APIキー(必須)</label>
       <input type="text" id="cfgKeepa" placeholder="あなたのKeepaAPIキー">
-      
-      <label style="color:#d9534f;">マネージャーAPI URL(Supabase・その1)</label>
-      <input type="url" id="cfgSniperUrl" placeholder="https://<プロジェクトID>.supabase.co/functions/v1/manager">
-      
-      <label style="color:#d9534f;">マネージャーAPI URL(Supabase・その2/予備)</label>
-      <input type="url" id="cfg10SiteUrl" placeholder="https://<プロジェクトID>.supabase.co/functions/v1/manager">
 
-      <div style="border-top:1px dashed #ccc; margin:15px 0 5px 0; padding-top:5px;"></div>
-      
-      <label>AmazonセラーID</label>
+      <label style="color:#d9534f;">AmazonセラーID(必須)</label>
       <input type="text" id="cfgSellerId" placeholder="A1234567890XYZなど">
-      
+
       <div class="modal-actions">
         <button style="background:#e2e8f0; color:#4a5568;" onclick="closeConfig()">閉じる</button>
         <button style="background:#1a365d; color:white;" onclick="saveConfig()">設定を保存</button>
@@ -2150,33 +2114,54 @@ async function syncPatrolData() {
 
         function forceReload(btn) { btn.style.transform = "rotate(360deg)"; setTimeout(() => btn.style.transform = "rotate(0deg)", 500); syncPatrolData(); fetchDashboardData(); }
         
-        function openConfig() {
+        async function openConfig() {
           document.getElementById("cfgSupabaseKey").value = AppStorage.get("sh_supabase_key", "");
           document.getElementById("cfgKeepa").value = AppStorage.get("sh_keepa", ""); 
-          // 💡 追加：WatcherとSniperのシートURLを読み込む
-          
-          document.getElementById("cfgSniperUrl").value = AppStorage.get("sh_sniper_url", ""); 
-          document.getElementById("cfg10SiteUrl").value = AppStorage.get("sh_tensite_url", "");
           document.getElementById("cfgSellerId").value = AppStorage.get("sh_seller_id", "");
           document.getElementById("configModal").style.display = "flex";
+
+          // 🌟 サーバー側の最新値があれば、それで上書きして表示する
+          try {
+            const settingsUrl = getSettingsApiUrl();
+            if (settingsUrl) {
+              const res = await fetchWithAuth(settingsUrl, { method: "GET" });
+              const result = await res.json();
+              if (result.success && result.data) {
+                if (result.data.keepa_api_key) document.getElementById("cfgKeepa").value = result.data.keepa_api_key;
+                if (result.data.seller_id) document.getElementById("cfgSellerId").value = result.data.seller_id;
+              }
+            }
+          } catch (e) {}
         }
 
         function closeConfig() { document.getElementById("configModal").style.display = "none"; }
         
-        function saveConfig() {
-          // 🌟 Supabase移行:スプレッドシートURL欄は削除したが、既存コード内の
-          // 「未入力チェック」を通すため、裏で実際のマネージャーAPI URLを流用してセットしておく
-          const mgrUrl = document.getElementById("cfgSniperUrl").value.trim() || document.getElementById("cfg10SiteUrl").value.trim() || "supabase";
-          ["sh_ssurl","sh_researcher_url","sh_researcher_gas_url","sh_watcher_sheet_url","sh_sniper_sheet_url","sh_yahoo_sheet_url"].forEach(k => {
-            AppStorage.set(k, mgrUrl);
+        // 🌟 全ユーザー共通のマネージャーAPI URL(コードに固定埋め込み、購入者は入力不要)
+        const MANAGER_API_URL = "https://ihsjwsdwjuapfdhtocmq.supabase.co/functions/v1/manager";
+
+        async function saveConfig() {
+          ["sh_ssurl","sh_researcher_url","sh_researcher_gas_url","sh_watcher_sheet_url","sh_sniper_sheet_url","sh_yahoo_sheet_url","sh_sniper_url","sh_tensite_url"].forEach(k => {
+            AppStorage.set(k, MANAGER_API_URL);
           });
-          AppStorage.set("sh_supabase_key", document.getElementById("cfgSupabaseKey").value.trim());
-          AppStorage.set("sh_keepa", document.getElementById("cfgKeepa").value.trim()); 
-          // 💡 追加：WatcherとSniperのシートURLを保存する
-          
-          AppStorage.set("sh_sniper_url", document.getElementById("cfgSniperUrl").value.trim()); 
-          AppStorage.set("sh_tensite_url", document.getElementById("cfg10SiteUrl").value.trim());
-          AppStorage.set("sh_seller_id", document.getElementById("cfgSellerId").value.trim());
+          const licenseKey = document.getElementById("cfgSupabaseKey").value.trim();
+          const keepaKey = document.getElementById("cfgKeepa").value.trim();
+          const sellerId = document.getElementById("cfgSellerId").value.trim();
+          AppStorage.set("sh_supabase_key", licenseKey);
+          AppStorage.set("sh_keepa", keepaKey); 
+          AppStorage.set("sh_seller_id", sellerId);
+
+          // 🌟 ローカル保存だけでなく、サーバー側(user_settings)にも反映する
+          // (research-job/cronはサーバー側のこの値を見て動くため)
+          try {
+            const settingsUrl = getSettingsApiUrl();
+            if (settingsUrl) {
+              await fetchWithAuth(settingsUrl, {
+                method: "PUT",
+                body: JSON.stringify({ keepa_api_key: keepaKey, seller_id: sellerId })
+              });
+            }
+          } catch (e) {}
+
           closeConfig(); syncPatrolData(); fetchDashboardData();
         }
         
@@ -4797,61 +4782,11 @@ async function syncPatrolData() {
       }
     }
 
-    window.switchSettingTab = function(tabKey) {
-      document.querySelectorAll('.setting-panel').forEach(p => p.style.display = 'none');
-      const tabs = { info: document.getElementById('tab-btn-info'), system: document.getElementById('tab-btn-system') };
-      Object.keys(tabs).forEach(k => { if(tabs[k]) { tabs[k].style.background = '#edf2f7'; tabs[k].style.color = '#4a5568'; } });
-      const activePanel = document.getElementById(`panel-setting-${tabKey}`);
-      if(activePanel) activePanel.style.display = 'block';
-      if(tabs[tabKey]) { tabs[tabKey].style.background = '#1a365d'; tabs[tabKey].style.color = 'white'; }
-
-      if(tabKey === 'info') loadInfoSettingsView();
-      if(tabKey === 'system') loadGasSettings();
-    };
-
     window.toggleTriggerTextUI = function(key) {
       const isChecked = document.getElementById(`gas-trigger-a-${key}`).checked;
       const textSpan = document.getElementById(`text-trigger-${key}`);
       if (isChecked) { textSpan.innerText = "稼働中"; textSpan.style.color = "#38a169"; } 
       else { textSpan.innerText = "停止中"; textSpan.style.color = "#a0aec0"; }
-    };
-
-    window.loadGasSettings = async function() {
-      let targetGasUrl = AppStorage.get("sh_tensite_url", "") || AppStorage.get("sh_sniper_url", "");
-      if (!targetGasUrl) return;
-      try {
-        const res = await fetchWithAuth(targetGasUrl, { method: 'POST', body: JSON.stringify({ command: 'getSettings' }) });
-        const data = await res.json();
-        if (data.success && data.settings) {
-          document.getElementById('gas-setting-apikey').value = data.settings.apiKey || "";
-          document.getElementById('gas-setting-sellerid').value = data.settings.sellerId || "";
-          document.getElementById('gas-setting-sheeturl').value = data.settings.linkedSheetId || "";
-          document.getElementById('gas-setting-serial').value = data.settings.serialCode || "";
-        }
-      } catch (err) {}
-    };
-
-    window.saveGasSettings = async function() {
-      const btn = document.getElementById('btn-save-gas-settings');
-      const originalText = btn.innerHTML;
-      const key = document.getElementById('gas-setting-apikey').value.trim();
-      const sellerId = document.getElementById('gas-setting-sellerid').value.trim();
-      const linkedSheetId = document.getElementById('gas-setting-sheeturl').value.trim();
-      const serialCode = document.getElementById('gas-setting-serial').value.trim();
-      if(!key || !serialCode) return alert("⚠️ Keepa APIキーとシリアルコードは必須です！");
-
-      btn.innerHTML = "保存・認証中..."; btn.disabled = true;
-      let targetGasUrl = AppStorage.get("sh_tensite_url", "") || AppStorage.get("sh_sniper_url", "");
-      try {
-        const res = await fetchWithAuth(targetGasUrl, {
-          method: 'POST',
-          body: JSON.stringify({ command: 'saveSettings', settings: { apiKey: key, sellerId: sellerId, linkedSheetId: linkedSheetId, serialCode: serialCode } })
-        });
-        const data = await res.json();
-        if (data.success) alert("✅ 設定とシリアルコードを保存しました！");
-        else alert("❌ 認証エラー:\n" + data.message);
-      } catch (err) { alert("通信エラーです"); } 
-      finally { btn.innerHTML = originalText; btn.disabled = false; }
     };
 
     window.loadGasTriggers = async function() {
@@ -5161,7 +5096,7 @@ async function syncPatrolData() {
     async function loadAllSchedules() {
       const apiKey = AppStorage.get("sh_supabase_key", "");
       const settingsUrl = getSettingsApiUrl();
-      if (!apiKey || !settingsUrl) { alert("先に⚙️設定でSupabase APIキーとマネージャーAPI URLを入力してください！"); return; }
+      if (!apiKey || !settingsUrl) { alert("先に⚙️設定でライセンスキーを入力してください！"); return; }
 
       try {
         const res = await fetchWithAuth(settingsUrl + "/schedules", { method: "GET" });
@@ -5179,7 +5114,7 @@ async function syncPatrolData() {
     async function saveAllSchedulesModal() {
       const apiKey = AppStorage.get("sh_supabase_key", "");
       const settingsUrl = getSettingsApiUrl();
-      if (!apiKey || !settingsUrl) { alert("先に⚙️設定でSupabase APIキーとマネージャーAPI URLを入力してください！"); return; }
+      if (!apiKey || !settingsUrl) { alert("先に⚙️設定でライセンスキーを入力してください！"); return; }
 
       const hourInputs = document.querySelectorAll(".allsched-hour");
       const enabledInputs = document.querySelectorAll(".allsched-enabled");
@@ -5413,7 +5348,6 @@ async function syncPatrolData() {
         if (!result.success) return;
         const d = result.data || {};
 
-        document.getElementById("rs-keepaApiKey").value = d.keepa_api_key || "";
         document.getElementById("rs-profitMargin").value = d.profit_margin ?? 20;
         document.getElementById("rs-watcherMode").value = d.watcher_mode || "A";
         document.getElementById("rs-sniperMode").value = d.sniper_mode || "A";
@@ -5446,13 +5380,12 @@ async function syncPatrolData() {
     async function saveResearcherSettings() {
       const apiKey = AppStorage.get("sh_supabase_key", "");
       const settingsUrl = getSettingsApiUrl();
-      if (!apiKey || !settingsUrl) { alert("先に⚙️設定でSupabase APIキーとマネージャーAPI URLを入力してください！"); return; }
+      if (!apiKey || !settingsUrl) { alert("先に⚙️設定でライセンスキーを入力してください！"); return; }
 
       const keepRanks = Array.from(document.querySelectorAll(".rs-keepRank:checked")).map(cb => cb.value);
       const categoryIds = Array.from(document.querySelectorAll(".rs-category:checked")).map(cb => parseInt(cb.value, 10));
 
       const payload = {
-        keepa_api_key: document.getElementById("rs-keepaApiKey").value.trim(),
         profit_margin: parseFloat(document.getElementById("rs-profitMargin").value) || 20,
         watcher_mode: document.getElementById("rs-watcherMode").value,
         sniper_mode: document.getElementById("rs-sniperMode").value,
