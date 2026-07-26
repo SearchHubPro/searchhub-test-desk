@@ -704,7 +704,7 @@
                  ondragleave="handleDragLeaveMini(event)" 
                  ondrop="handleDropMini(event)">
             <i class="fas fa-file-upload" style="margin-right: 6px;"></i> レポートをドロップ
-            <input type="file" style="display:none;" accept=".txt,.csv" onchange="processFile(event.target.files[0])">
+            <input type="file" style="display:none;" accept=".txt,.csv" multiple onchange="processFiles(event.target.files)">
           </label>
         </div>
 
@@ -3497,77 +3497,202 @@ async function syncPatrolData() {
       document.getElementById('drop-zone').classList.remove('dragover');
       
       const files = e.dataTransfer.files;
-      if (files && files.length > 0) processFile(files[0]);
+      if (files && files.length > 0) processFiles(files);
     }
 
     function handleFileSelect(e) {
       const files = e.target.files;
-      if (files && files.length > 0) processFile(files[0]);
+      if (files && files.length > 0) processFiles(files);
     }
 
-    function processFile(file) {
+    function readFileAsTextAsync(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = reject;
+        // 💡 Amazonの注文レポート(TXT)は伝統的にShift_JIS、ペイメントレポート(CSV)はUTF-8で出力される
+        const encoding = file.name.toLowerCase().endsWith('.txt') ? 'Shift_JIS' : 'UTF-8';
+        reader.readAsText(file, encoding);
+      });
+    }
+
+    function toIsoDate(raw) {
+      if (!raw) return null;
+      const parts = String(raw).trim().split('/');
+      if (parts.length !== 3) return null;
+      const pad2 = n => String(n).padStart(2, '0');
+      return `${parts[0]}-${pad2(parts[1])}-${pad2(parts[2])}`;
+    }
+
+    function parseAmazonReportText(text) {
+      const lines = text.split(/\r?\n/);
+      const reportData = [];
+      const expenseData = [];
+      let reportType = "";
+      let txtH = {}; let csvH = {};
+
+      const cleanNum = (val) => {
+        if (val === undefined || val === null) return 0;
+        return Number(String(val).replace(/[,円￥\s"]/g, '')) || 0;
+      };
+
+      for (let l of lines) {
+        l = l.trim(); if (!l) continue;
+        let cols = l.split("\t").map(c => c.trim().replace(/^"|"$/g, ''));
+
+        if (cols.includes("amazon-order-id")) { reportType = "TXT"; cols.forEach((h, idx) => { txtH[h] = idx; }); continue; }
+        if (cols.includes("トランザクションの種類") && cols.includes("SKU")) { reportType = "CSV"; cols.forEach((h, idx) => { csvH[h] = idx; }); continue; }
+
+        if (reportType === "TXT" && Object.keys(txtH).length > 0) {
+          let status = cols[txtH["order-status"]] || "";
+          if (status.indexOf("Shipped") === -1) continue;
+          let salesChannelCol = cols[txtH["sales-channel"]] || "";
+          if (salesChannelCol.trim() === "Non-Amazon") continue;
+          let channel = cols[txtH["fulfillment-channel"]] || "";
+          let isMerchant = (channel === "Merchant");
+          reportData.push({
+            type: "TXT", isMerchant, sku: cols[txtH["sku"]], orderId: cols[txtH["amazon-order-id"]],
+            date: String(cols[txtH["purchase-date"]] || "").split("T")[0].replace(/-/g, "/"),
+            sales: cleanNum(cols[txtH["item-price"]]), shipping: cleanNum(cols[txtH["shipping-price"]])
+          });
+        }
+
+        if (reportType === "CSV" && Object.keys(csvH).length > 0) {
+          let orderId = cols[csvH["注文番号"]] || "";
+          let transType = cols[csvH["トランザクションの種類"]] || "";
+          let description = cols[csvH["説明"]] || "";
+          let sku = cols[csvH["SKU"]] || "";
+          let getNum = (k) => cleanNum(cols[csvH[k]]);
+
+          const isAdjustmentRefund = (transType === "調整" && description.includes("FBA在庫の返金"));
+
+          if (!orderId) {
+            if (isAdjustmentRefund && sku) {
+              let dateStr = cols[csvH["日付/時間"]] || "";
+              reportData.push({ type: "ADJ", sku: sku, date: dateStr.split(" ")[0] || "", hotenCSV: getNum("その他") });
+              continue;
+            }
+            const targetExpTypes = ["FBA 在庫関連の手数料", "注文外料金", "サービス料金"];
+            if (targetExpTypes.includes(transType)) {
+              let amount = getNum("合計");
+              if (amount !== 0) {
+                let dateStr = cols[csvH["日付/時間"]] || "";
+                let dayStr = dateStr.split(" ")[0] || "";
+                let monthParts = dayStr.split("/");
+                let monthStr = monthParts.length >= 2 ? `${monthParts[0]}/${monthParts[1]}` : "";
+                expenseData.push({ month: monthStr, date: dayStr, type: transType, amount: Math.abs(amount), memo: description });
+              }
+            }
+            continue;
+          }
+
+          let fulfillment = cols[csvH["フルフィルメント"]] || "";
+          let mktShip = 0;
+          if (transType === "配送サービス" && description.includes("Amazon 経由で購入した配送ラベル")) {
+            mktShip = getNum("その他");
+          }
+          let isMerchantCSV = (fulfillment === "出品者" || mktShip < 0);
+          let isRefund = (transType === "返金") || isAdjustmentRefund;
+
+          reportData.push({
+            type: "CSV", orderId, isMerchantCSV, isRefund, sku,
+            salesFromCSV: getNum("商品売上") || getNum("商品価格"),
+            shippingFromCSV: getNum("配送料"),
+            mktShipFee: mktShip,
+            refFee: getNum("販売手数料") + getNum("手数料"),
+            fbaFeeCSV: getNum("FBA 手数料"),
+            pointFeeCSV: getNum("Amazonポイントの費用"),
+            promoFeeCSV: getNum("プロモーション割引額"),
+            hotenCSV: getNum("その他")
+          });
+        }
+      }
+
+      return { reportData, expenseData };
+    }
+
+    async function parseFileToReportData(file) {
+      let text = await readFileAsTextAsync(file);
+
+      if (file.name.toLowerCase().endsWith('.csv')) {
+        let tsv = "";
+        let inQuote = false;
+        for (let i = 0; i < text.length; i++) {
+          let c = text[i];
+          if (c === '"') { inQuote = !inQuote; }
+          else if (c === ',' && !inQuote) { tsv += '\t'; }
+          else { tsv += c; }
+        }
+        text = tsv;
+      }
+
+      return parseAmazonReportText(text);
+    }
+
+    // 🌟 サーバー側(manager関数のapplyAmazonReportコマンド)に解析結果を送って反映する
+    async function applyAmazonReportData(reportData, expenseData) {
+      if (reportData.length === 0 && expenseData.length === 0) {
+        return { updateCount: 0, expCount: 0 };
+      }
+      const mgrUrl = AppStorage.get("sh_sniper_url", "") || AppStorage.get("sh_tensite_url", "");
+      const res = await fetchWithAuth(mgrUrl, {
+        method: 'POST',
+        body: JSON.stringify({ command: 'applyAmazonReport', reportData, expenseData })
+      });
+      const result = await res.json();
+      if (!result.success) throw new Error(result.message || "不明なエラー");
+      return result;
+    }
+
+    // 💡 複数ファイルを一気にドロップ/選択しても、まず全部を読み込んでから、まとめて正しい順番で1回だけ反映する
+    // （ファイルのドロップ順・ブラウザの並び順に関係なく、返金が売上より先に処理されて上書きされる事故を防ぐ）
+    async function processFiles(fileList) {
+      const files = Array.from(fileList);
+      if (files.length === 0) return;
+
       const dropLabel = document.getElementById('mini-drop-zone');
       const originalText = dropLabel.innerHTML;
-      dropLabel.innerHTML = '⌛ 処理中...'; 
 
-      const reader = new FileReader();
-      
-      reader.onload = async function(e) {
-        let text = e.target.result;
-        
-        if (file.name.toLowerCase().endsWith('.csv')) {
-          let tsv = "";
-          let inQuote = false;
-          for (let i = 0; i < text.length; i++) {
-            let c = text[i];
-            if (c === '"') { 
-              inQuote = !inQuote; 
-            } 
-            else if (c === ',' && !inQuote) { 
-              tsv += '\t'; 
-            } 
-            else { 
-              tsv += c; 
-            }
-          }
-          text = tsv;
-        }
+      let combinedReportData = [];
+      let combinedExpenseData = [];
+      const errors = [];
 
-        const ssUrl = AppStorage.get("sh_ssurl", "");
-        let targetGasUrl = AppStorage.get("sh_tensite_url", "") || AppStorage.get("sh_sniper_url", "");
-        
-        if (!ssUrl || !targetGasUrl) {
-           alert('❌ 設定からManagerのURLとGAS URLを登録してください！');
-           dropLabel.innerHTML = originalText;
-           return;
-        }
-
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        dropLabel.innerHTML = `⌛ 解析中... (${i + 1}/${files.length}) ${file.name}`;
         try {
-          const res = await fetchWithAuth(targetGasUrl, {
-            method: 'POST',
-            body: JSON.stringify({ 
-              command: 'uploadReport', 
-              ssUrl: ssUrl, 
-              fileName: file.name,
-              content: text 
-            })
-          });
-          const json = await res.json();
-          
-          if (json.success) {
-            alert('✅ 取り込み完了！マネージャーシートに反映されました！');
-            loadLedgerData(); 
-            if (typeof loadExpenseListData === 'function') loadExpenseListData();
-          } else {
-            alert('❌ GAS側でエラーが起きたで！\n\n' + json.message);
+          const { reportData, expenseData } = await parseFileToReportData(file);
+          if (reportData.length === 0 && expenseData.length === 0) {
+            errors.push(`${file.name}: このファイルから取り込めるデータが見つかりませんでした`);
+            continue;
           }
-        } catch(err) {
-          alert('❌ 通信エラーが発生したわ。\n' + err.message);
+          combinedReportData = combinedReportData.concat(reportData);
+          combinedExpenseData = combinedExpenseData.concat(expenseData);
+        } catch (err) {
+          errors.push(`${file.name}: ${err.message}`);
         }
-        dropLabel.innerHTML = originalText;
-      };
-      
-      reader.readAsText(file, 'Shift_JIS'); 
+      }
+
+      dropLabel.innerHTML = `⌛ ${files.length}件のファイルをまとめて反映中...`;
+
+      let totalUpdate = 0, totalExp = 0;
+      try {
+        const result = await applyAmazonReportData(combinedReportData, combinedExpenseData);
+        totalUpdate = result.updateCount; totalExp = result.expCount;
+      } catch (err) {
+        errors.push(`反映処理: ${err.message}`);
+      }
+
+      dropLabel.innerHTML = originalText;
+
+      let msg = `【取込完了】\n${files.length}件のファイルを処理しました。\n注文を合計${totalUpdate}件更新し、\n新規の経費を合計${totalExp}件追加しました！`;
+      if (errors.length > 0) {
+        msg += `\n\n⚠️ 以下でエラーが出ました:\n` + errors.join('\n');
+      }
+      alert(msg);
+
+      if (typeof loadLedgerData === 'function') loadLedgerData();
+      if (typeof loadExpenseListData === 'function') loadExpenseListData();
     }
 
     function handleDragOverMini(e) {
@@ -3589,7 +3714,7 @@ async function syncPatrolData() {
       
       const files = e.dataTransfer.files;
       if (files && files.length > 0) {
-        processFile(files[0]);
+        processFiles(files);
       }
     }
 
