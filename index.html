@@ -12,12 +12,10 @@
   <meta name="apple-mobile-web-app-title" content="SearchHub">
   <meta name="theme-color" content="#6d9eeb">
   
-  <link rel="apple-touch-icon-precomposed" href="https://i.ibb.co/Tx2N76YL/icon.png">
-  <link rel="shortcut icon" href="https://i.ibb.co/Tx2N76YL/icon.png">
+  <link rel="apple-touch-icon-precomposed" href="https://i.ibb.co/Xrt68V7p/icon.png">
+  <link rel="shortcut icon" href="https://i.ibb.co/Xrt68V7p/icon.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- 🚀 JANコード専用の爆速解析エンジン(Quagga) -->
-  <script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2/dist/quagga.min.js"></script>
   
   <style>
     body { 
@@ -28,14 +26,7 @@
       color: #333; 
       padding-bottom: env(safe-area-inset-bottom); 
       min-height: 100vh;
-      overflow-x: hidden;
     }
-    /* 🌟 Amazonリサーチ結果カード:PC用の横並び(160px画像+120px固定列)は
-       スマホ幅に入りきらないため、縦積みに切り替える */
-    .amazon-result-row { flex-direction: column !important; align-items: stretch !important; gap: 16px !important; padding: 16px !important; }
-    .amazon-result-img > div { width: 100% !important; height: 140px !important; }
-    .amazon-result-stats { width: 100% !important; flex-direction: row !important; }
-    .amazon-result-stats > div { flex: 1; }
     
     .header-wrapper { position: sticky; top: 0; z-index: 100; box-shadow: none !important; margin: 0 !important; padding: 0 !important; }
     .header { background-color: #ffffff; color: #333; padding: calc(14px + env(safe-area-inset-top)) 24px 14px 24px; display: flex; align-items: center; justify-content: space-between; position: relative; border-bottom: 2px solid #000000; margin: 0 !important; }
@@ -83,13 +74,7 @@
 
     /* 💡 修正箇所①：スマホ用の縦並びレイアウト修正 */
     .turnover-container { display: block; padding-bottom: 16px; }
-    .turnover-row-1 { display: flex; flex-wrap: wrap; gap: 12px; width: 100%; align-items: stretch; }
-    .keepa-token-panel { flex: 1 1 100%; }
-    .turnover-row-1 .metrics-list { flex: 1 1 auto; min-width: 0; }
-    .turnover-row-1 .chart-box { flex: 0 0 110px; width: 110px; }
-    .turnover-row-1 .chart-box .circular-chart { width: 110px; height: 110px; }
-    .turnover-row-1 .chart-box .percentage span:first-child { font-size: 16px !important; }
-    .turnover-row-1 .chart-box .percentage span:last-child { font-size: 9px !important; }
+    .turnover-row-1 { display: flex; flex-direction: column; gap: 16px; width: 100%; align-items: center; }
     
     .keepa-token-panel { width: 100%; box-sizing: border-box; }
     .metrics-list { display: flex; flex-direction: column; gap: 6px; justify-content: center; }
@@ -105,8 +90,7 @@
     .percentage span { font-size: 9px; color: #565959; margin-top: -3px; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
 
     .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 16px 20px 16px; }
-    .dash-btn { position: relative; background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px 10px; text-align: center; color: #1a365d; font-weight: bold; font-size: 13px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: transform 0.1s; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-width: 0; width: 100%; box-sizing: border-box; }
-    .dash-btn, .dash-btn * { white-space: normal !important; word-break: break-word; }
+    .dash-btn { position: relative; background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px 10px; text-align: center; color: #1a365d; font-weight: bold; font-size: 13px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: transform 0.1s; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; white-space: nowrap;}
     .dash-btn:active { transform: scale(0.95); background: #f8fafc; }
     .dash-btn i { font-size: 26px; }
     .dash-dot { display: none; position: absolute; top: -6px; right: -6px; width: 16px; height: 16px; background-color: #e53e3e; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3); border: 2px solid white; }
@@ -164,17 +148,6 @@
 
     #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: flex; justify-content: center; align-items: center; transition: opacity 0.5s; }
     .splash-img { width: 100%; height: 100%; object-fit: cover; }
-    #barcodeTestVideo {
-      width: 100% !important;
-      height: 200px !important;
-      overflow: hidden;
-      position: relative;
-    }
-    #barcodeTestVideo video {
-      width: 100% !important;
-      height: 100% !important;
-      object-fit: cover;
-    }
     .splash-text { position: absolute; bottom: 60px; color: white; font-size: 14px; font-weight: bold; letter-spacing: 2px; animation: pulse 1.5s infinite; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
@@ -209,10 +182,6 @@
       .view {
         background-color: transparent; 
       }
-      /* 🌟 PC幅ではAmazonリサーチ結果カードを元の横並びに戻す */
-      .amazon-result-row { flex-direction: row !important; align-items: center !important; padding: 24px !important; }
-      .amazon-result-img > div { width: 160px !important; height: 160px !important; }
-      .amazon-result-stats { width: 120px !important; flex-direction: column !important; }
       
       .content {
         padding: 24px; 
@@ -342,7 +311,7 @@
   <div id="ptr-indicator">⬇️ 引っ張って更新...</div>
 
   <div id="loader">
-    <img class="splash-img" src="https://i.ibb.co/R49z2pwV/Chat-GPT-Image-2026-5-31-20-50-12.png" alt="Splash">
+    <img class="splash-img" src="https://i.ibb.co/vK1Sdtp/Search.png" alt="Splash">
     <div class="splash-text">SYSTEM LOADING...</div>
   </div>
 
@@ -1063,17 +1032,7 @@
     <div class="content">
       <div class="search-box">
         <input type="text" id="amazonKw" placeholder="ASINや型番を入力..." onkeypress="if(event.keyCode==13) runAmazonResearch()">
-        <button onclick="startBarcodeScanTest()" id="scanTestBtn" style="background:#4a5568; padding:0 12px; flex-shrink:0;"><i class="fas fa-camera"></i></button>
         <button onclick="runAmazonResearch()" id="searchBtn">解析</button>
-      </div>
-
-      <div id="barcodeTestScannerArea" style="display:none; width:100%; max-width:450px; margin: 12px auto; border: 1px solid #cbd5e0; border-radius: 12px; overflow: hidden; position: relative; background:#111; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-        <div id="barcodeTestVideo" style="display:block; line-height:0;"></div>
-        <canvas id="barcodeTestCanvas" style="display:none;"></canvas>
-        <button onclick="stopBarcodeScanTest()" style="position:absolute; top:8px; right:8px; z-index:13; background:rgba(0,0,0,0.5); color:white; border:none; border-radius:50%; width:32px; height:32px; font-size:14px;"><i class="fas fa-times"></i></button>
-        <div id="barcodeTestStatus" style="position:absolute; bottom:0; left:0; width:100%; text-align:center; background:linear-gradient(transparent, rgba(0,0,0,0.85)); color:#ffffff; padding:20px 0 12px 0; font-size:13px; font-weight:bold; letter-spacing:0.5px; z-index:12; pointer-events:none;">
-          バーコード（JANコード）読み取り中...
-        </div>
       </div>
 
       <div id="amazon-container">
@@ -1440,8 +1399,6 @@
 
       <label style="color:#d9534f;">AmazonセラーID(必須)</label>
       <input type="text" id="cfgSellerId" placeholder="A1234567890XYZなど">
-
-      <button onclick="enablePushNotifications(this)" style="width:100%; background:#ff9900; color:white; padding:10px; border:none; border-radius:6px; font-weight:bold; margin-top:10px; box-shadow:0 2px 4px rgba(0,0,0,0.2);">🔔 スマホに通知を送る許可をする</button>
 
       <div class="modal-actions">
         <button style="background:#e2e8f0; color:#4a5568;" onclick="closeConfig()">閉じる</button>
@@ -2516,58 +2473,6 @@ async function syncPatrolData() {
           loadAmazonHistory();
         }
         
-        // 🚀 カメラ（QuaggaJS）でバーコードスキャン
-        function startBarcodeScanTest() {
-          const area = document.getElementById('barcodeTestScannerArea');
-          const status = document.getElementById('barcodeTestStatus');
-          
-          area.style.display = 'block';
-          status.innerText = "カメラ初期化中...";
-
-          Quagga.init({
-            inputStream: {
-              name: "Live",
-              type: "LiveStream",
-              target: document.getElementById('barcodeTestVideo'), 
-              constraints: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "environment" },
-              area: { top: "0%", right: "0%", left: "0%", bottom: "0%" } 
-            },
-            decoder: { readers: ["ean_reader", "ean_8_reader"] },
-            locate: true 
-          }, function(err) {
-            if (err) {
-              console.error(err);
-              alert("カメラの起動に失敗しました。");
-              area.style.display = 'none';
-              return;
-            }
-            Quagga.start();
-            status.innerText = "バーコード（JANコード）読み取り中...";
-          });
-
-          Quagga.onDetected(function(result) {
-            if (result && result.codeResult && result.codeResult.code) {
-              const code = result.codeResult.code;
-              const matched = code.match(/^(49\d{11}|45\d{11})$/);
-              if (matched) {
-                status.innerText = "🎯 読み取り成功！";
-                document.getElementById('amazonKw').value = matched[1]; 
-                if (navigator.vibrate) navigator.vibrate(200); 
-                Quagga.offDetected();
-                setTimeout(() => {
-                  stopBarcodeScanTest();
-                  runAmazonResearch(); 
-                }, 500);
-              }
-            }
-          });
-        }
-
-        function stopBarcodeScanTest() {
-          try { Quagga.stop(); Quagga.offDetected(); } catch(e) {}
-          document.getElementById('barcodeTestScannerArea').style.display = 'none';
-        }
-
         async function runAmazonResearch(fallbackTitle) {
           const kw = document.getElementById("amazonKw").value.trim(); 
           const resView = document.getElementById("amazonResult"); 
@@ -2685,11 +2590,11 @@ async function syncPatrolData() {
 
             // 💡 2. 左・中・右 の完璧な横並びレイアウト！（PC版最適化）
             resView.innerHTML = `
-              <div class="amazon-result-row" style="display:flex; flex-direction:row; gap:24px; align-items:center; background:#fff; border-radius:12px; border:1px solid #e2e8f0; padding:24px; margin-bottom:16px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+              <div style="display:flex; flex-direction:row; gap:24px; align-items:center; background:#fff; border-radius:12px; border:1px solid #e2e8f0; padding:24px; margin-bottom:16px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
                 
-                <div class="amazon-result-img">${imgHtml}</div>
+                ${imgHtml}
                 
-                <div class="amazon-result-mid" style="flex:1; min-width:0; display:flex; flex-direction:column; justify-content:center; gap:12px;">
+                <div style="flex:1; min-width:0; display:flex; flex-direction:column; justify-content:center; gap:12px;">
                   <div style="font-size:18px; color:#4a5568; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">型番: <span id="itemModelText" style="color:#1a365d; font-size:24px; font-weight:900;">${modelNum !== '不明' ? modelNum : productTitle.substring(0,30)+'...'}</span></div>
                   
                   <div style="display:flex; align-items:center; gap:10px; cursor:pointer;" onclick="copyAsin('${asin}')">
@@ -2707,7 +2612,7 @@ async function syncPatrolData() {
                   </div>
                 </div>
                 
-                <div class="amazon-result-stats" style="display:flex; flex-direction:column; align-items:stretch; gap:16px; flex-shrink:0; width:120px;">
+                <div style="display:flex; flex-direction:column; align-items:stretch; gap:16px; flex-shrink:0; width:120px;">
                   <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; background:#f0f4ff; border:2px solid #dbeafe; padding:16px 4px; border-radius:12px; box-shadow:inset 0 2px 4px rgba(0,0,0,0.05);">
                     <span style="font-size:13px; color:#4a72b2; font-weight:bold; margin-bottom:6px;">中古出品</span>
                     <span style="font-size:32px; font-weight:900; color:#2c4c8f; line-height:1;">${usedOffers}</span>
@@ -6234,18 +6139,9 @@ async function syncPatrolData() {
           const registration = await navigator.serviceWorker.register('./firebase-messaging-sw.js'); await navigator.serviceWorker.ready;
           const currentToken = await getToken(messaging, { vapidKey: "BJMWJMJx2CGiDNuLq7xixOKeBlN8Hd3vNvbx4QmK7mf1R3ccUCXuP0o-ZlsRurw7MhpiwWLZuvu57twS5jypqlU", serviceWorkerRegistration: registration });
           if (currentToken) {
-            AppStorage.set("sh_fcm_token", currentToken);
-            try {
-              const settingsUrl = getSettingsApiUrl();
-              if (settingsUrl) {
-                await fetchWithAuth(settingsUrl, { method: "PUT", body: JSON.stringify({ fcm_token: currentToken }) });
-              }
-              alert("✅ 通知設定完了！");
-              btn.innerText = "✅ 通知設定完了";
-            } catch (e) {
-              alert("⚠️ 保存に失敗しました。もう一度お試しください。");
-              btn.innerText = "🔔 通知許可する"; btn.disabled = false;
-            }
+            AppStorage.set("sh_fcm_token", currentToken); const sniperUrl = AppStorage.get("sh_sniper_url", "");
+            if (sniperUrl) { fetchWithAuth(sniperUrl, { method: 'POST', body: JSON.stringify({ command: 'saveToken', token: currentToken }) }); alert("✅ 通知設定完了！"); btn.innerText = "✅ 通知設定完了"; } 
+            else { alert("⚠️ S側 GAS URL を設定してください！"); btn.innerText = "🔔 通知許可する"; btn.disabled = false; }
           } else { alert("❌ トークン取得失敗"); btn.innerText = "🔔 通知許可する"; btn.disabled = false; }
         } else { alert("通知ブロック中。"); btn.innerText = "🔔 通知許可する"; btn.disabled = false; }
       } catch (err) { alert("エラー\n" + err.message); btn.innerText = "🔔 通知許可する"; btn.disabled = false; }
