@@ -1383,6 +1383,15 @@
       
       <label style="font-size:11px; font-weight:bold; display:block; margin-top:8px;">商品名</label>
       <input type="text" id="edit_title" style="width:100%; padding:8px; box-sizing:border-box; background:#f8fafc;">
+
+      <label style="font-size:11px; font-weight:bold; display:block; margin-top:8px;">写真（後から追加・変更OK）</label>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <input type="text" id="edit_imageUrl" placeholder="https://... または右のボタンで撮影" oninput="updateEditImagePreview()" style="flex:1; padding:8px; box-sizing:border-box;">
+        <button type="button" onclick="document.getElementById('edit_photoFile').click()" style="flex-shrink:0; background:#4a5568; color:white; border:none; padding:8px 10px; border-radius:6px; cursor:pointer;"><i class="fas fa-camera"></i></button>
+        <input type="file" id="edit_photoFile" accept="image/*" style="display:none;" onchange="handlePhotoFileSelect(event, 'edit')">
+        <img id="edit_imagePreview" src="" style="width:36px; height:36px; object-fit:contain; border:1px solid #eee; border-radius:6px; background:#f8fafc; display:none;">
+      </div>
+      <div id="edit_uploadStatus" style="font-size:11px; color:#3182ce; margin-top:4px;"></div>
       
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px;">
         <div><label style="font-size:11px; font-weight:bold;">型番</label><input type="text" id="edit_model" style="width:100%; padding:8px; box-sizing:border-box;"></div>
@@ -1404,9 +1413,35 @@
       
       <div style="background:#f8fafc; padding:10px; border-radius:8px; margin-top:12px; border:1px solid #e2e8f0;">
         <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;">
-          <div><label style="font-size:11px; font-weight:bold; color:#718096;">仕入値</label><input type="number" id="edit_buyPrice" style="width:100%; padding:8px; box-sizing:border-box; text-align:right;"></div>
-          <div><label style="font-size:11px; font-weight:bold; color:#718096;">送料/経費</label><input type="number" id="edit_expense" style="width:100%; padding:8px; box-sizing:border-box; text-align:right;"></div>
+          <div><label style="font-size:11px; font-weight:bold; color:#718096;">仕入値</label><input type="number" id="edit_buyPrice" oninput="calcEditProfit()" style="width:100%; padding:8px; box-sizing:border-box; text-align:right;"></div>
+          <div><label style="font-size:11px; font-weight:bold; color:#718096;">送料/経費</label><input type="number" id="edit_expense" oninput="calcEditProfit()" style="width:100%; padding:8px; box-sizing:border-box; text-align:right;"></div>
           <div><label style="font-size:11px; font-weight:bold; color:#3182ce;">販売予定</label><input type="number" id="edit_estPrice" style="width:100%; padding:8px; box-sizing:border-box; text-align:right;"></div>
+        </div>
+      </div>
+
+      <div style="background:#fff5f5; padding:10px; border-radius:8px; margin-top:12px; border:1px solid #feb2b2;">
+        <div style="font-size:12px; font-weight:bold; color:#c53030; margin-bottom:8px;"><i class="fas fa-receipt"></i> 販売情報（古物台帳用・売却時に入力）</div>
+        <label style="font-size:11px; font-weight:bold; color:#718096; display:block; margin-bottom:2px;">販路</label>
+        <select id="edit_salesChannel" style="width:100%; padding:8px; box-sizing:border-box; border:1px solid #cbd5e0; border-radius:6px; outline:none; margin-bottom:8px;">
+          <option value="">ーー 未設定 ーー</option>
+          <option value="Amazon">Amazon</option>
+          <option value="メルカリ">メルカリ</option>
+          <option value="ヤフオク">ヤフオク</option>
+          <option value="ラクマ">ラクマ</option>
+          <option value="その他">その他</option>
+        </select>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px; min-width:0;">
+          <div style="min-width:0;"><label style="font-size:11px; font-weight:bold; color:#718096;">販売日</label><input type="date" id="edit_saleDate" oninput="calcEditProfit()" style="width:100%; padding:8px; box-sizing:border-box;"></div>
+          <div style="min-width:0;"><label style="font-size:11px; font-weight:bold; color:#718096;">注文番号</label><input type="text" id="edit_orderNum" style="width:100%; padding:8px; box-sizing:border-box;"></div>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin-bottom:8px;">
+          <div><label style="font-size:11px; font-weight:bold; color:#718096;">売上額</label><input type="number" id="edit_actualSales" oninput="calcEditProfit()" style="width:100%; padding:8px; box-sizing:border-box; text-align:right;"></div>
+          <div><label style="font-size:11px; font-weight:bold; color:#718096;">配送料</label><input type="number" id="edit_actualShipping" oninput="calcEditProfit()" style="width:100%; padding:8px; box-sizing:border-box; text-align:right;"></div>
+          <div><label style="font-size:11px; font-weight:bold; color:#718096;">手数料</label><input type="number" id="edit_actualFee" oninput="calcEditProfit()" style="width:100%; padding:8px; box-sizing:border-box; text-align:right;"></div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; padding-top:8px; border-top:1px dashed #feb2b2;">
+          <span style="font-size:12px; font-weight:bold; color:#718096;">利益（自動計算）</span>
+          <span id="edit_profitDisplay" style="font-size:18px; font-weight:900; color:#07A27B;">¥0</span>
         </div>
       </div>
 
@@ -3973,6 +4008,8 @@ async function syncPatrolData() {
       document.getElementById('edit_buyDate').value = item.buyDate || '';
       document.getElementById('edit_supplier').value = item.supplier || '';
       document.getElementById('edit_title').value = item.title || '';
+      document.getElementById('edit_imageUrl').value = item.imgUrl || '';
+      updateEditImagePreview();
       document.getElementById('edit_model').value = item.model || '';
       document.getElementById('edit_sku').value = item.sku || '';
       document.getElementById('edit_condition').value = item.condition || '';
@@ -3981,6 +4018,66 @@ async function syncPatrolData() {
       document.getElementById('edit_buyPrice').value = item.buyPrice || 0;
       document.getElementById('edit_expense').value = item.expense || 0;
       document.getElementById('edit_estPrice').value = item.estPrice || 0;
+      document.getElementById('edit_salesChannel').value = item.salesChannel || '';
+      document.getElementById('edit_saleDate').value = item.sellDate || '';
+      document.getElementById('edit_orderNum').value = item.orderNum || '';
+      document.getElementById('edit_actualSales').value = item.sales || 0;
+      document.getElementById('edit_actualShipping').value = item.shipping || 0;
+      document.getElementById('edit_actualFee').value = item.fee || 0;
+      calcEditProfit();
+    }
+
+    // 🌟 写真プレビュー更新
+    function updateEditImagePreview() {
+      const url = document.getElementById('edit_imageUrl').value.trim();
+      const img = document.getElementById('edit_imagePreview');
+      if (url) { img.src = url; img.style.display = 'block'; }
+      else { img.style.display = 'none'; }
+    }
+
+    // 🌟 写真ファイル選択→Supabase Storageへアップロード
+    async function handlePhotoFileSelect(e, prefix) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const statusEl = document.getElementById(prefix + '_uploadStatus');
+      if (statusEl) statusEl.innerText = '⌛ アップロード中...';
+
+      try {
+        const base64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result.split(',')[1]);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+        const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+
+        const mgrUrl = AppStorage.get("sh_sniper_url", "") || AppStorage.get("sh_tensite_url", "");
+        const res = await fetchWithAuth(mgrUrl, { method: "POST", body: JSON.stringify({ command: "uploadLedgerPhoto", base64, fileExt: ext }) });
+        const result = await res.json();
+        if (!result.success) { if (statusEl) statusEl.innerText = '❌ 失敗: ' + (result.message || ''); return; }
+
+        document.getElementById(prefix + '_imageUrl').value = result.url;
+        if (prefix === 'edit') updateEditImagePreview();
+        if (statusEl) statusEl.innerText = '✅ アップロード完了';
+      } catch (err) {
+        if (statusEl) statusEl.innerText = '❌ エラーが発生しました';
+      }
+    }
+
+    // 🌟 手動入力の販売情報から利益を自動計算
+    function calcEditProfit() {
+      const buyPrice = Number(document.getElementById('edit_buyPrice').value) || 0;
+      const expense = Number(document.getElementById('edit_expense').value) || 0;
+      const sales = Number(document.getElementById('edit_actualSales').value) || 0;
+      const shipping = Number(document.getElementById('edit_actualShipping').value) || 0;
+      const fee = Number(document.getElementById('edit_actualFee').value) || 0;
+      const m = buyPrice + expense;
+      const profit = sales > 0 ? (sales + fee + shipping - m) : (sales + fee + shipping);
+      const el = document.getElementById('edit_profitDisplay');
+      if (el) {
+        el.innerText = `¥${profit.toLocaleString()}`;
+        el.style.color = profit >= 0 ? '#07A27B' : '#e53e3e';
+      }
     }
 
     async function deleteLedgerItem() {
@@ -4031,6 +4128,7 @@ async function syncPatrolData() {
         buyDate: document.getElementById('edit_buyDate').value,
         supplier: document.getElementById('edit_supplier').value,
         title: document.getElementById('edit_title').value,
+        imageUrl: document.getElementById('edit_imageUrl').value,
         model: document.getElementById('edit_model').value,
         sku: document.getElementById('edit_sku').value,
         condition: document.getElementById('edit_condition').value,
@@ -4038,7 +4136,13 @@ async function syncPatrolData() {
         description: document.getElementById('edit_description').value,
         buyPrice: Number(document.getElementById('edit_buyPrice').value),
         expense: Number(document.getElementById('edit_expense').value),
-        estPrice: Number(document.getElementById('edit_estPrice').value)
+        estPrice: Number(document.getElementById('edit_estPrice').value),
+        salesChannel: document.getElementById('edit_salesChannel').value,
+        saleDate: document.getElementById('edit_saleDate').value,
+        orderNum: document.getElementById('edit_orderNum').value,
+        actualSales: Number(document.getElementById('edit_actualSales').value),
+        actualShipping: Number(document.getElementById('edit_actualShipping').value),
+        actualFee: Number(document.getElementById('edit_actualFee').value)
       };
       
       try {
@@ -5359,9 +5463,9 @@ async function syncPatrolData() {
               <input type="number" min="0" max="23" value="${hour}" data-key="${t.key}" class="allsched-hour"
                      style="width:46px; padding:6px; border:1px solid #ccc; border-radius:6px; text-align:center;">
               <span style="font-size:11px; color:#888;">時</span>
-              <label style="display:flex; align-items:center; gap:4px; font-size:11px;">
+              <label class="sh-toggle">
                 <input type="checkbox" data-key="${t.key}" class="allsched-enabled" ${enabled ? "checked" : ""}>
-                稼働
+                <span class="sh-slider"></span>
               </label>
             </div>
           </div>`;
