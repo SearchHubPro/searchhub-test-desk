@@ -542,8 +542,8 @@
         <label style="font-size:12px; font-weight:bold; color:#4a5568;">ラベル(例: PC周辺機器検索)</label>
         <input type="text" id="cs-label" style="width:100%; box-sizing:border-box; padding:8px; margin:4px 0 10px; border:1px solid #cbd5e0; border-radius:6px; font-size:13px;">
 
-        <label style="font-size:12px; font-weight:bold; color:#4a5568;">セラーID(カンマ区切り、最大10人)</label>
-        <textarea id="cs-sellerIds" rows="2" style="width:100%; box-sizing:border-box; padding:8px; margin:4px 0 10px; border:1px solid #cbd5e0; border-radius:6px; font-size:12px;"></textarea>
+        <label style="font-size:12px; font-weight:bold; color:#4a5568;">セラーリストから選択(最大10人)</label>
+        <div id="cs-seller-checklist" style="max-height:180px; overflow:auto; background:#fff; border:1px solid #e2e8f0; border-radius:6px; padding:8px; margin:4px 0 10px; font-size:12px;">読み込み中...</div>
 
         <label style="font-size:12px; font-weight:bold; color:#4a5568;">対象カテゴリーID(カンマ区切り、KeepaのカテゴリID)</label>
         <textarea id="cs-categoryIds" rows="2" style="width:100%; box-sizing:border-box; padding:8px; margin:4px 0 10px; border:1px solid #cbd5e0; border-radius:6px; font-size:12px;"></textarea>
@@ -5543,10 +5543,28 @@ async function syncPatrolData() {
       const mgrUrl = AppStorage.get("sh_sniper_url", "") || AppStorage.get("sh_tensite_url", "");
       if (!mgrUrl) return;
       const listDiv = document.getElementById('category-search-list');
+      const checklistDiv = document.getElementById('cs-seller-checklist');
       listDiv.innerHTML = '<div class="loading-spinner">読み込み中...</div>';
+      checklistDiv.innerHTML = '読み込み中...';
       try {
-        const res = await fetchWithAuth(mgrUrl, { method: "POST", body: JSON.stringify({ command: "getCategorySearchGroups" }) });
-        const result = await res.json();
+        const [groupsRes, sellersRes] = await Promise.all([
+          fetchWithAuth(mgrUrl, { method: "POST", body: JSON.stringify({ command: "getCategorySearchGroups" }) }),
+          fetchWithAuth(mgrUrl, { method: "POST", body: JSON.stringify({ command: "getSellerCandidates", status: "approved" }) }),
+        ]);
+        const result = await groupsRes.json();
+        const sellersResult = await sellersRes.json();
+
+        const sellerList = sellersResult.success ? (sellersResult.data || []) : [];
+        if (sellerList.length === 0) {
+          checklistDiv.innerHTML = '<div style="color:#a0aec0;">承認済みセラーがまだいません(セラーリスト画面で先に承認してください)</div>';
+        } else {
+          checklistDiv.innerHTML = sellerList.map(s => `
+            <label style="display:flex; align-items:center; gap:6px; padding:4px 0; cursor:pointer;">
+              <input type="checkbox" class="cs-seller-checkbox" value="${escapeHtml(s.seller_id)}">
+              <span>${escapeHtml(s.seller_name || s.seller_id)}</span>
+            </label>`).join("");
+        }
+
         if (!result.success) { listDiv.innerHTML = '<div style="color:#e53e3e;">取得に失敗しました</div>'; return; }
         if (!result.data || result.data.length === 0) { listDiv.innerHTML = '<div style="text-align:center; color:#a0aec0; padding:16px;">まだ登録がありません</div>'; return; }
 
@@ -5567,16 +5585,15 @@ async function syncPatrolData() {
       const mgrUrl = AppStorage.get("sh_sniper_url", "") || AppStorage.get("sh_tensite_url", "");
       if (!mgrUrl) { openConfig(); return; }
       const label = document.getElementById('cs-label').value.trim();
-      const sellerIds = document.getElementById('cs-sellerIds').value.split(/[,、\n]/).map(s => s.trim()).filter(Boolean);
+      const sellerIds = Array.from(document.querySelectorAll('.cs-seller-checkbox:checked')).map(cb => cb.value).slice(0, 10);
       const categoryIds = document.getElementById('cs-categoryIds').value.split(/[,、\n]/).map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
-      if (!label || sellerIds.length === 0) { alert("ラベルとセラーIDは必須です"); return; }
+      if (!label || sellerIds.length === 0) { alert("ラベルと、セラーの選択(最低1人)は必須です"); return; }
 
       try {
         const res = await fetchWithAuth(mgrUrl, { method: "POST", body: JSON.stringify({ command: "saveCategorySearchGroup", data: { label, sellerIds, categoryIds } }) });
         const result = await res.json();
         if (!result.success) { alert("失敗しました: " + (result.message || "不明なエラー")); return; }
         document.getElementById('cs-label').value = "";
-        document.getElementById('cs-sellerIds').value = "";
         document.getElementById('cs-categoryIds').value = "";
         loadCategorySearchGroups();
       } catch (e) {
