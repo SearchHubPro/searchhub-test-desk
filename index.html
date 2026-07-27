@@ -722,6 +722,9 @@
           <button onclick="enrichLedgerImages()" id="btn-enrich-ledger-img" style="background:#805ad5; color:white; border:none; padding:6px 12px; border-radius:6px; font-size:11px; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
             <i class="fas fa-image"></i> 既存データの画像を取得
           </button>
+          <button onclick="openFleaRegisterModal()" style="background:#d69e2e; color:white; border:none; padding:6px 12px; border-radius:6px; font-size:11px; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+            <i class="fas fa-store"></i> フリマ登録
+          </button>
           <button onclick="openCsvExportModal()" style="background:#38a169; color:white; border:none; padding:6px 12px; border-radius:6px; font-size:11px; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
             <i class="fas fa-file-csv"></i> CSV出力
           </button>
@@ -732,6 +735,54 @@
         </div>
         
       </div> 
+
+      <div id="fleaRegisterModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+          <h3 style="margin-top:0; border-bottom:2px solid #e2e8f0; padding-bottom:8px;"><i class="fas fa-store"></i> フリマ商品の手動登録</h3>
+          <div style="font-size:11px; color:#718096; margin-bottom:12px;">Amazonにカタログが無い商品を、手入力で登録します。</div>
+
+          <label style="font-size:11px; font-weight:bold; display:block; margin-top:8px;">商品名<span style="color:#e53e3e;">*</span></label>
+          <input type="text" id="flea_title" style="width:100%; padding:8px; box-sizing:border-box;">
+
+          <label style="font-size:11px; font-weight:bold; display:block; margin-top:8px;">写真（任意・後から追加もOK）</label>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input type="text" id="flea_imageUrl" placeholder="https://... または右のボタンで撮影" oninput="updateFleaImagePreview()" style="flex:1; padding:8px; box-sizing:border-box;">
+            <button type="button" onclick="document.getElementById('flea_photoFile').click()" style="flex-shrink:0; background:#4a5568; color:white; border:none; padding:8px 10px; border-radius:6px; cursor:pointer;"><i class="fas fa-camera"></i></button>
+            <input type="file" id="flea_photoFile" accept="image/*" style="display:none;" onchange="handlePhotoFileSelect(event, 'flea')">
+          </div>
+          <div id="flea_uploadStatus" style="font-size:11px; color:#3182ce; margin-top:4px;"></div>
+          <img id="flea_imagePreview" src="" style="width:60px; height:60px; object-fit:contain; border:1px solid #eee; border-radius:6px; background:#f8fafc; display:none; margin-top:6px;">
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; min-width:0;">
+            <div style="min-width:0;">
+              <label style="font-size:11px; font-weight:bold;">仕入れ日</label>
+              <input type="date" id="flea_purchaseDate" style="width:100%; padding:8px; box-sizing:border-box;">
+            </div>
+            <div style="min-width:0;">
+              <label style="font-size:11px; font-weight:bold;">仕入先<span style="color:#e53e3e;">*</span></label>
+              <select id="flea_supplier" style="width:100%; padding:8px; box-sizing:border-box; border:1px solid #ccc; border-radius:6px; outline:none;">
+                <option value="">読込中...</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px;">
+            <div>
+              <label style="font-size:11px; font-weight:bold;">仕入値<span style="color:#e53e3e;">*</span></label>
+              <input type="number" id="flea_buyPrice" style="width:100%; padding:8px; box-sizing:border-box; text-align:right;">
+            </div>
+            <div>
+              <label style="font-size:11px; font-weight:bold;">販売予定価格<span style="color:#e53e3e;">*</span></label>
+              <input type="number" id="flea_sellPrice" style="width:100%; padding:8px; box-sizing:border-box; text-align:right;">
+            </div>
+          </div>
+
+          <div class="modal-actions" style="margin-top:20px;">
+            <button style="background:#e2e8f0; color:#4a5568;" onclick="document.getElementById('fleaRegisterModal').style.display='none'">キャンセル</button>
+            <button id="fleaRegisterBtn" style="background:#1a365d; color:white;" onclick="submitFleaRegister()">この内容で登録</button>
+          </div>
+        </div>
+      </div>
 
       <div id="csvExportModal" class="modal">
         <div class="modal-content">
@@ -5630,6 +5681,79 @@ async function syncPatrolData() {
 
     // 🌟 条件検索URL(セラーグループ+カテゴリ制限)
     // 🌟 セラーグループの自動処理進捗(ポインタ)を表示するだけのシンプルな画面
+    // 🌟 フリマ商品の手動登録(Amazonカタログが無い商品用)
+    async function openFleaRegisterModal() {
+      document.getElementById('fleaRegisterModal').style.display = 'flex';
+      document.getElementById('flea_title').value = '';
+      document.getElementById('flea_imageUrl').value = '';
+      document.getElementById('flea_buyPrice').value = '';
+      document.getElementById('flea_sellPrice').value = '';
+      document.getElementById('flea_imagePreview').style.display = 'none';
+      document.getElementById('flea_uploadStatus').innerText = '';
+
+      const now = new Date();
+      document.getElementById('flea_purchaseDate').value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+
+      if (typeof window.globalSupplierData === 'undefined' || window.globalSupplierData.length === 0) {
+        const mgrUrl = AppStorage.get("sh_sniper_url", "") || AppStorage.get("sh_tensite_url", "");
+        if (mgrUrl) {
+          try {
+            const res = await fetchWithAuth(mgrUrl, { method: 'POST', body: JSON.stringify({ command: 'getSuppliers' }) });
+            const json = await res.json();
+            if (json.success && json.data) window.globalSupplierData = json.data;
+          } catch(e) {}
+        }
+      }
+      const supSelect = document.getElementById('flea_supplier');
+      supSelect.innerHTML = '<option value="">選択してください</option>';
+      (window.globalSupplierData || []).forEach(s => { supSelect.innerHTML += `<option value="${s}">${s}</option>`; });
+    }
+
+    function updateFleaImagePreview() {
+      const url = document.getElementById('flea_imageUrl').value.trim();
+      const img = document.getElementById('flea_imagePreview');
+      if (url) { img.src = url; img.style.display = 'block'; }
+      else { img.style.display = 'none'; }
+    }
+
+    async function submitFleaRegister() {
+      const title = document.getElementById('flea_title').value.trim();
+      const imageUrl = document.getElementById('flea_imageUrl').value.trim();
+      const purchaseDate = document.getElementById('flea_purchaseDate').value;
+      const supplier = document.getElementById('flea_supplier').value;
+      const buyPrice = Number(document.getElementById('flea_buyPrice').value);
+      const sellPrice = Number(document.getElementById('flea_sellPrice').value);
+
+      if (!title) return alert("⚠️ 商品名を入力してください！");
+      if (!supplier) return alert("⚠️ 仕入先を選択してください！");
+      if (!buyPrice) return alert("⚠️ 仕入値を入力してください！");
+      if (!sellPrice) return alert("⚠️ 販売予定価格を入力してください！");
+
+      const mgrUrl = AppStorage.get("sh_sniper_url", "") || AppStorage.get("sh_tensite_url", "");
+      const btn = document.getElementById('fleaRegisterBtn');
+      const originalText = btn.innerText;
+      btn.innerText = "⌛ 登録中..."; btn.disabled = true;
+
+      try {
+        const res = await fetchWithAuth(mgrUrl, {
+          method: 'POST',
+          body: JSON.stringify({ command: 'registerFleaItem', data: { title, imageUrl, purchaseDate, supplier, buyPrice, sellPrice } })
+        });
+        const result = await res.json();
+        if (!result.success) { alert("❌ 登録失敗: " + (result.message || "")); btn.innerText = originalText; btn.disabled = false; return; }
+
+        btn.style.background = "#38a169"; btn.innerText = "✅ 登録完了！";
+        setTimeout(() => {
+          document.getElementById('fleaRegisterModal').style.display = 'none';
+          btn.style.background = "#1a365d"; btn.innerText = originalText; btn.disabled = false;
+          loadLedgerData();
+        }, 1200);
+      } catch(err) {
+        alert("❌ 登録失敗: 通信エラーが発生しました");
+        btn.innerText = originalText; btn.disabled = false;
+      }
+    }
+
     async function loadSellerGroupProgress() {
       const mgrUrl = AppStorage.get("sh_sniper_url", "") || AppStorage.get("sh_tensite_url", "");
       const box = document.getElementById('seller-group-progress-box');
