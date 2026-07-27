@@ -528,7 +528,30 @@
 
         <button class="dash-btn" onclick="openView('view-researcher-settings'); switchResearcherSettingTab('general');"><i class="fas fa-sliders-h" style="color:#4a5568;"></i>リサーチャー設定</button>
 
+        <button class="dash-btn" onclick="openView('view-category-search'); loadCategorySearchGroups();"><i class="fas fa-layer-group" style="color:#3182ce;"></i>条件検索URL</button>
+
       </div>
+    </div>
+  </div>
+
+  <div id="view-category-search" class="view">
+    <div class="content">
+      <div style="font-size:12px; color:#718096; margin-bottom:12px;">セラーIDのグループ(最大10人)ごとに、対象カテゴリーIDを設定できます。夜間の自動リサーチが、最終実行が古いグループから順番に処理します。</div>
+
+      <div style="background:#f7fafc; border-radius:12px; padding:16px; margin-bottom:16px;">
+        <label style="font-size:12px; font-weight:bold; color:#4a5568;">ラベル(例: PC周辺機器検索)</label>
+        <input type="text" id="cs-label" style="width:100%; box-sizing:border-box; padding:8px; margin:4px 0 10px; border:1px solid #cbd5e0; border-radius:6px; font-size:13px;">
+
+        <label style="font-size:12px; font-weight:bold; color:#4a5568;">セラーID(カンマ区切り、最大10人)</label>
+        <textarea id="cs-sellerIds" rows="2" style="width:100%; box-sizing:border-box; padding:8px; margin:4px 0 10px; border:1px solid #cbd5e0; border-radius:6px; font-size:12px;"></textarea>
+
+        <label style="font-size:12px; font-weight:bold; color:#4a5568;">対象カテゴリーID(カンマ区切り、KeepaのカテゴリID)</label>
+        <textarea id="cs-categoryIds" rows="2" style="width:100%; box-sizing:border-box; padding:8px; margin:4px 0 10px; border:1px solid #cbd5e0; border-radius:6px; font-size:12px;"></textarea>
+
+        <button onclick="saveCategorySearchGroup()" style="width:100%; padding:10px; border:none; border-radius:8px; background:#1a365d; color:#fff; font-weight:bold; font-size:13px; cursor:pointer;">この内容で追加</button>
+      </div>
+
+      <div id="category-search-list"></div>
     </div>
   </div>
 
@@ -1915,6 +1938,7 @@
         else if(viewId === 'view-researcher') titleEl.innerText = 'Researcher リサーチリスト'; 
         else if(viewId === 'view-manager-menu') titleEl.innerText = 'Manager メニュー';
         else if(viewId === 'view-researcher-menu') titleEl.innerText = 'Researcher メニュー';
+        else if(viewId === 'view-category-search') titleEl.innerText = '条件検索URL';
         else if(viewId === 'view-ledger') titleEl.innerText = '販売管理';
         else if(viewId === 'view-bulk-register') titleEl.innerText = '一括商品登録';
         else if(viewId === 'view-info') titleEl.innerText = '各種情報';
@@ -5298,6 +5322,7 @@ async function syncPatrolData() {
     const ALL_SCHEDULE_TASKS = [
       { key: "research-1",        task_type: "research",               slot_no: 1, label: "🔍 自動リサーチ開始（Keepa取得＋ヤフオク巡回）", defaultHour: 0,  defaultEnabled: true },
       { key: "seller-1",          task_type: "seller",                 slot_no: 1, label: "📦 セラーリスト挿入",                             defaultHour: 18, defaultEnabled: false },
+      { key: "category_search-1", task_type: "category_search",        slot_no: 1, label: "🗂️ 条件検索URL(グループ)処理",                     defaultHour: 21, defaultEnabled: false },
       { key: "expiry-1",          task_type: "expiry",                 slot_no: 1, label: "🗑️ 期限切れチェック",                            defaultHour: 23, defaultEnabled: false },
       { key: "update-1",         task_type: "update",                 slot_no: 1, label: "🔄 在庫データ更新",                               defaultHour: 22, defaultEnabled: false },
       { key: "watcher_sync-1",    task_type: "watcher_sync",           slot_no: 1, label: "🌐 検索URL同期（ウォッチャー）",                   defaultHour: 2,  defaultEnabled: false },
@@ -5510,6 +5535,65 @@ async function syncPatrolData() {
       } finally {
         btn.disabled = false;
         btn.innerHTML = originalText;
+      }
+    }
+
+    // 🌟 条件検索URL(セラーグループ+カテゴリ制限)
+    async function loadCategorySearchGroups() {
+      const mgrUrl = AppStorage.get("sh_sniper_url", "") || AppStorage.get("sh_tensite_url", "");
+      if (!mgrUrl) return;
+      const listDiv = document.getElementById('category-search-list');
+      listDiv.innerHTML = '<div class="loading-spinner">読み込み中...</div>';
+      try {
+        const res = await fetchWithAuth(mgrUrl, { method: "POST", body: JSON.stringify({ command: "getCategorySearchGroups" }) });
+        const result = await res.json();
+        if (!result.success) { listDiv.innerHTML = '<div style="color:#e53e3e;">取得に失敗しました</div>'; return; }
+        if (!result.data || result.data.length === 0) { listDiv.innerHTML = '<div style="text-align:center; color:#a0aec0; padding:16px;">まだ登録がありません</div>'; return; }
+
+        listDiv.innerHTML = result.data.map(g => `
+          <div style="background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:12px; margin-bottom:8px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div style="font-weight:bold; font-size:13px; color:#1a365d;">${escapeHtml(g.label)}</div>
+              <button onclick="deleteCategorySearchGroup(${g.id})" style="background:#fed7d7; color:#c53030; border:none; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:bold; cursor:pointer;">削除</button>
+            </div>
+            <div style="font-size:11px; color:#718096; margin-top:4px;">セラー: ${(g.seller_ids || []).length}人 / カテゴリ: ${(g.category_ids || []).length}件 ${g.last_run_at ? '/ 最終実行: ' + new Date(g.last_run_at).toLocaleString('ja-JP') : '/ 未実行'}</div>
+          </div>`).join("");
+      } catch (e) {
+        listDiv.innerHTML = '<div style="color:#e53e3e;">通信エラーが発生しました</div>';
+      }
+    }
+
+    async function saveCategorySearchGroup() {
+      const mgrUrl = AppStorage.get("sh_sniper_url", "") || AppStorage.get("sh_tensite_url", "");
+      if (!mgrUrl) { openConfig(); return; }
+      const label = document.getElementById('cs-label').value.trim();
+      const sellerIds = document.getElementById('cs-sellerIds').value.split(/[,、\n]/).map(s => s.trim()).filter(Boolean);
+      const categoryIds = document.getElementById('cs-categoryIds').value.split(/[,、\n]/).map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
+      if (!label || sellerIds.length === 0) { alert("ラベルとセラーIDは必須です"); return; }
+
+      try {
+        const res = await fetchWithAuth(mgrUrl, { method: "POST", body: JSON.stringify({ command: "saveCategorySearchGroup", data: { label, sellerIds, categoryIds } }) });
+        const result = await res.json();
+        if (!result.success) { alert("失敗しました: " + (result.message || "不明なエラー")); return; }
+        document.getElementById('cs-label').value = "";
+        document.getElementById('cs-sellerIds').value = "";
+        document.getElementById('cs-categoryIds').value = "";
+        loadCategorySearchGroups();
+      } catch (e) {
+        alert("通信エラーが発生しました");
+      }
+    }
+
+    async function deleteCategorySearchGroup(id) {
+      if (!confirm("このグループを削除しますか？")) return;
+      const mgrUrl = AppStorage.get("sh_sniper_url", "") || AppStorage.get("sh_tensite_url", "");
+      try {
+        const res = await fetchWithAuth(mgrUrl, { method: "POST", body: JSON.stringify({ command: "deleteCategorySearchGroup", id }) });
+        const result = await res.json();
+        if (!result.success) { alert("失敗しました: " + (result.message || "不明なエラー")); return; }
+        loadCategorySearchGroups();
+      } catch (e) {
+        alert("通信エラーが発生しました");
       }
     }
 
