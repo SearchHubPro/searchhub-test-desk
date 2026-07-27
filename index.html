@@ -528,7 +528,7 @@
 
         <button class="dash-btn" onclick="openView('view-researcher-settings'); switchResearcherSettingTab('general');"><i class="fas fa-sliders-h" style="color:#4a5568;"></i>リサーチャー設定</button>
 
-        <button class="dash-btn" onclick="openView('view-category-search'); loadCategorySearchGroups();"><i class="fas fa-layer-group" style="color:#3182ce;"></i>条件検索URL</button>
+        <button class="dash-btn" onclick="openView('view-category-search'); loadSellerGroupProgress();"><i class="fas fa-layer-group" style="color:#3182ce;"></i>セラーグループ進捗</button>
 
       </div>
     </div>
@@ -536,22 +536,9 @@
 
   <div id="view-category-search" class="view">
     <div class="content">
-      <div style="font-size:12px; color:#718096; margin-bottom:12px;">セラーIDのグループ(最大10人)ごとに、対象カテゴリーIDを設定できます。夜間の自動リサーチが、最終実行が古いグループから順番に処理します。</div>
+      <div style="font-size:12px; color:#718096; margin-bottom:16px;">承認済みセラーは、古い順に5人ずつ自動でグループ化されます。夜間の自動リサーチが「連続実行URL数」ぶんだけ、前回の続きから処理して、最後まで行くと1人目に戻ります(セラーを削除・追加してもグループは自動でズレて再構成されます)。</div>
 
-      <div style="background:#f7fafc; border-radius:12px; padding:16px; margin-bottom:16px;">
-        <label style="font-size:12px; font-weight:bold; color:#4a5568;">ラベル(例: PC周辺機器検索)</label>
-        <input type="text" id="cs-label" style="width:100%; box-sizing:border-box; padding:8px; margin:4px 0 10px; border:1px solid #cbd5e0; border-radius:6px; font-size:13px;">
-
-        <label style="font-size:12px; font-weight:bold; color:#4a5568;">セラーリストから選択(最大10人)</label>
-        <div id="cs-seller-checklist" style="max-height:180px; overflow:auto; background:#fff; border:1px solid #e2e8f0; border-radius:6px; padding:8px; margin:4px 0 10px; font-size:12px;">読み込み中...</div>
-
-        <label style="font-size:12px; font-weight:bold; color:#4a5568;">対象カテゴリーID(カンマ区切り、KeepaのカテゴリID)</label>
-        <textarea id="cs-categoryIds" rows="2" style="width:100%; box-sizing:border-box; padding:8px; margin:4px 0 10px; border:1px solid #cbd5e0; border-radius:6px; font-size:12px;"></textarea>
-
-        <button onclick="saveCategorySearchGroup()" style="width:100%; padding:10px; border:none; border-radius:8px; background:#1a365d; color:#fff; font-weight:bold; font-size:13px; cursor:pointer;">この内容で追加</button>
-      </div>
-
-      <div id="category-search-list"></div>
+      <div id="seller-group-progress-box" style="background:#f7fafc; border-radius:12px; padding:20px; text-align:center;">読み込み中...</div>
     </div>
   </div>
 
@@ -5539,80 +5526,30 @@ async function syncPatrolData() {
     }
 
     // 🌟 条件検索URL(セラーグループ+カテゴリ制限)
-    async function loadCategorySearchGroups() {
+    // 🌟 セラーグループの自動処理進捗(ポインタ)を表示するだけのシンプルな画面
+    async function loadSellerGroupProgress() {
       const mgrUrl = AppStorage.get("sh_sniper_url", "") || AppStorage.get("sh_tensite_url", "");
-      if (!mgrUrl) return;
-      const listDiv = document.getElementById('category-search-list');
-      const checklistDiv = document.getElementById('cs-seller-checklist');
-      listDiv.innerHTML = '<div class="loading-spinner">読み込み中...</div>';
-      checklistDiv.innerHTML = '読み込み中...';
+      const box = document.getElementById('seller-group-progress-box');
+      if (!mgrUrl) { box.innerHTML = '先に⚙️設定でライセンスキーを入力してください'; return; }
+      box.innerHTML = '読み込み中...';
       try {
-        const [groupsRes, sellersRes] = await Promise.all([
-          fetchWithAuth(mgrUrl, { method: "POST", body: JSON.stringify({ command: "getCategorySearchGroups" }) }),
-          fetchWithAuth(mgrUrl, { method: "POST", body: JSON.stringify({ command: "getSellerCandidates", status: "approved" }) }),
-        ]);
-        const result = await groupsRes.json();
-        const sellersResult = await sellersRes.json();
-
-        const sellerList = sellersResult.success ? (sellersResult.data || []) : [];
-        if (sellerList.length === 0) {
-          checklistDiv.innerHTML = '<div style="color:#a0aec0;">承認済みセラーがまだいません(セラーリスト画面で先に承認してください)</div>';
-        } else {
-          checklistDiv.innerHTML = sellerList.map(s => `
-            <label style="display:flex; align-items:center; gap:6px; padding:4px 0; cursor:pointer;">
-              <input type="checkbox" class="cs-seller-checkbox" value="${escapeHtml(s.seller_id)}">
-              <span>${escapeHtml(s.seller_name || s.seller_id)}</span>
-            </label>`).join("");
+        const res = await fetchWithAuth(mgrUrl, { method: "POST", body: JSON.stringify({ command: "getSellerGroupProgress" }) });
+        const result = await res.json();
+        if (!result.success) { box.innerHTML = '取得に失敗しました'; return; }
+        if (result.totalSellers === 0) {
+          box.innerHTML = '<div style="color:#a0aec0;">承認済みセラーがまだいません</div>';
+          return;
         }
-
-        if (!result.success) { listDiv.innerHTML = '<div style="color:#e53e3e;">取得に失敗しました</div>'; return; }
-        if (!result.data || result.data.length === 0) { listDiv.innerHTML = '<div style="text-align:center; color:#a0aec0; padding:16px;">まだ登録がありません</div>'; return; }
-
-        listDiv.innerHTML = result.data.map(g => `
-          <div style="background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:12px; margin-bottom:8px;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <div style="font-weight:bold; font-size:13px; color:#1a365d;">${escapeHtml(g.label)}</div>
-              <button onclick="deleteCategorySearchGroup(${g.id})" style="background:#fed7d7; color:#c53030; border:none; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:bold; cursor:pointer;">削除</button>
-            </div>
-            <div style="font-size:11px; color:#718096; margin-top:4px;">セラー: ${(g.seller_ids || []).length}人 / カテゴリ: ${(g.category_ids || []).length}件 ${g.last_run_at ? '/ 最終実行: ' + new Date(g.last_run_at).toLocaleString('ja-JP') : '/ 未実行'}</div>
-          </div>`).join("");
+        box.innerHTML = `
+          <div style="font-size:32px; font-weight:bold; color:#1a365d;">${result.currentGroupNo} / ${result.totalGroups} グループ目</div>
+          <div style="font-size:12px; color:#718096; margin-top:8px;">承認済みセラー ${result.totalSellers}人中、${result.pointer}人目まで処理済み</div>
+          <div style="font-size:12px; color:#718096; margin-top:4px;">1回の実行で ${result.maxUrlsPerRun} グループ(最大${result.maxUrlsPerRun * 5}人)ずつ進みます</div>
+        `;
       } catch (e) {
-        listDiv.innerHTML = '<div style="color:#e53e3e;">通信エラーが発生しました</div>';
+        box.innerHTML = '通信エラーが発生しました';
       }
     }
 
-    async function saveCategorySearchGroup() {
-      const mgrUrl = AppStorage.get("sh_sniper_url", "") || AppStorage.get("sh_tensite_url", "");
-      if (!mgrUrl) { openConfig(); return; }
-      const label = document.getElementById('cs-label').value.trim();
-      const sellerIds = Array.from(document.querySelectorAll('.cs-seller-checkbox:checked')).map(cb => cb.value).slice(0, 10);
-      const categoryIds = document.getElementById('cs-categoryIds').value.split(/[,、\n]/).map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
-      if (!label || sellerIds.length === 0) { alert("ラベルと、セラーの選択(最低1人)は必須です"); return; }
-
-      try {
-        const res = await fetchWithAuth(mgrUrl, { method: "POST", body: JSON.stringify({ command: "saveCategorySearchGroup", data: { label, sellerIds, categoryIds } }) });
-        const result = await res.json();
-        if (!result.success) { alert("失敗しました: " + (result.message || "不明なエラー")); return; }
-        document.getElementById('cs-label').value = "";
-        document.getElementById('cs-categoryIds').value = "";
-        loadCategorySearchGroups();
-      } catch (e) {
-        alert("通信エラーが発生しました");
-      }
-    }
-
-    async function deleteCategorySearchGroup(id) {
-      if (!confirm("このグループを削除しますか？")) return;
-      const mgrUrl = AppStorage.get("sh_sniper_url", "") || AppStorage.get("sh_tensite_url", "");
-      try {
-        const res = await fetchWithAuth(mgrUrl, { method: "POST", body: JSON.stringify({ command: "deleteCategorySearchGroup", id }) });
-        const result = await res.json();
-        if (!result.success) { alert("失敗しました: " + (result.message || "不明なエラー")); return; }
-        loadCategorySearchGroups();
-      } catch (e) {
-        alert("通信エラーが発生しました");
-      }
-    }
 
     async function loadSellerCandidates(status) {
       const containerId = status === "approved" ? "seller-approved-list" : "seller-pending-list";
