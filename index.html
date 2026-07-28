@@ -1884,9 +1884,15 @@
         const profitLabel = currentHomeMode === 'purchase' ? '想定利益' : '確定利益';
         const marginLabel = currentHomeMode === 'purchase' ? '想定利益率' : '利益率';
 
+        // 💡 lastDataDayが未提供のため、実際にデータがある最後の日をbars配列から逆算する
+        let lastDataDay = monthDataObj.bars.length;
+        for (let i = monthDataObj.bars.length - 1; i >= 0; i--) {
+          if (monthDataObj.bars[i] > 0) { lastDataDay = i + 1; break; }
+        }
+
         contentArea.innerHTML = `
           <div class="summary-header">
-            <div class="summary-date">${currentHomeMonth.split('/')[1]}月${monthDataObj.lastDataDay}日 時点</div>
+            <div class="summary-date">${currentHomeMonth.split('/')[1]}月${lastDataDay}日 時点</div>
             <div class="summary-values">
               <div class="summary-box">
                 <div class="summary-label">合計 ${currentHomeMode==='purchase'?'仕入':'販売'}</div>
