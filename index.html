@@ -5612,6 +5612,8 @@ async function syncPatrolData() {
         const parts = [];
         if (d.skipped) return escapeHtml(`${prefix} スキップ:${d.skipped}`);
         if (d.error) return escapeHtml(`${prefix} エラー:${d.error}`);
+        // 🌟 { armed:true, message:"..." } のように、そのまま読める文が入っている形
+        if (typeof d.message === "string" && d.message) return escapeHtml(`${prefix} ${d.message}`);
         if (jobType === "research") {
           if (typeof d.keepaProcessed === "number") parts.push(`Keepa評価 ${d.keepaProcessed}件`);
           if (typeof d.marketCheckProcessed === "number") parts.push(`ヤフオク確認 ${d.marketCheckProcessed}件`);
@@ -5637,7 +5639,9 @@ async function syncPatrolData() {
         } else if (jobType === "sniper_daily_clear") {
           parts.push("表示をリセット");
         }
-        if (parts.length === 0) return escapeHtml(rawMessage); // 想定外の形なら元のまま表示
+        // 🌟 想定外の形でも、生のJSONは画面に出さない。
+        //    (新しいcronは日本語で書き込むので、ここに来るのは古いログだけ)
+        if (parts.length === 0) return escapeHtml(prefix || "完了");
         return escapeHtml(`${prefix} ${parts.join("、")}`);
       }
       const container = document.getElementById("job-logs-list");
