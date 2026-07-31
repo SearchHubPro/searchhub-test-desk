@@ -2036,7 +2036,12 @@ async function syncPatrolData() {
               if (resSniper.discordStatus) { AppStorage.set("sh_discord_toggle", resSniper.discordStatus); updateDiscordBtnUI(resSniper.discordStatus); }
             }
             if (res10 && !res10.error && res10.sites) Object.assign(mergedSites, res10.sites);
-            document.getElementById("lastUpdate").innerText = "最終更新: " + Utilities_formatDate(new Date());
+            // 🌟 付属品フィルターが何件はじいたかを出す。
+            //    0件のままなら、そもそもフィルターが効いていないということ。
+            const hiddenTotal = ((resSniper && resSniper.hiddenCount) || 0) + ((res10 && res10.hiddenCount) || 0);
+            document.getElementById("lastUpdate").innerText =
+              "最終更新: " + Utilities_formatDate(new Date()) + (hiddenTotal > 0 ? `（付属品${hiddenTotal}件を非表示）` : "（非表示0件）");
+            try { console.log("付属品フィルターの内訳", (resSniper && resSniper.hiddenReasons) || {}, (res10 && res10.hiddenReasons) || {}); } catch (e) {}
             globalHistoryData = mergedSites;
             for (const [divId, gasSiteName] of Object.entries(siteKeyMap)) {
               const container = document.getElementById(divId);
@@ -2339,7 +2344,33 @@ async function syncPatrolData() {
             }
             
            // ★ カートのテキストを「情報なし」に変更
-            let bbValText = bbUsedPrice > 0 ? '¥' + bbUsedPrice.toLocaleString() : '情報なし';
+            // 🌟 「情報なし」だけだと、カートが無いのか・新品が取ってるのか・
+            //    Keepaのトークンが足りないのかが区別できない。理由まで出す。
+            //    ・中古がカートを取っている → その価格
+            //    ・新品がカートを取っている → その価格に「新品」と付ける(中古では取れない印)
+            //    ・そもそもカートが付いていない → カート無し
+            //    ・Keepaのトークン切れ/エラー → その旨(この時は数字が信用できない)
+            let bbValText = '';
+            let bbNote = '';
+            if (bbUsedPrice > 0) {
+              bbValText = '¥' + bbUsedPrice.toLocaleString();
+            } else {
+              const bbNewPrice = (p.stats && p.stats.buyBoxPrice > 0)
+                ? p.stats.buyBoxPrice + (p.stats.buyBoxShipping > 0 ? p.stats.buyBoxShipping : 0)
+                : 0;
+              if (bbNewPrice > 0) {
+                bbValText = '¥' + bbNewPrice.toLocaleString();
+                bbNote = '新品が取得中';
+              } else if (prodJson.error) {
+                bbValText = 'Keepaエラー';
+                bbNote = String(prodJson.error.type || prodJson.error.message || '');
+              } else if (typeof prodJson.tokensLeft === 'number' && prodJson.tokensLeft < 0) {
+                bbValText = 'トークン不足';
+                bbNote = '残' + prodJson.tokensLeft;
+              } else {
+                bbValText = 'カート無し';
+              }
+            }
             // ★ Keepaの11番（中古出品者数）を正確に取得
             const usedOffers = (p.stats.current && p.stats.current[12] !== -1) ? p.stats.current[12] : 0;
             const usedCountAvg90 = (p.stats.avg90 && p.stats.avg90[12] !== -1) ? p.stats.avg90[12] : usedOffers;
@@ -2462,6 +2493,7 @@ async function syncPatrolData() {
                 <div class="market-price-card" style="background:#f0fff4; border:1px solid #c6f6d5; padding:14px 8px; border-radius:8px; text-align:center; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
                   <div style="font-size:12px; color:#2f855a; font-weight:bold; margin-bottom:6px;">カート価格</div>
                   <div style="font-size:18px; font-weight:bold; color:#22543d;">${bbValText}</div>
+                  ${bbNote ? `<div style="font-size:11px; color:#718096; margin-top:2px;">${bbNote}</div>` : ''}
                 </div>
               </div>
               
