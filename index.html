@@ -3308,6 +3308,9 @@ async function syncPatrolData() {
               alert("✅ 仕入れsheetへの移動が完了しました！\n（リサーチsheetからも削除されました）");
               // 💡 登録完了後、GASから最新のリストを再取得して画面を更新する！（行ズレ完全防止！）
               await loadResearcherData();
+              // 🌟 仕入れリストは一度読んだら画面側に溜め込む作りなので、
+              //   ここで空にしておかないと、次に開いたときに登録前の古い一覧が出る。
+              try { globalPurchaseListData = []; } catch (e) {}
             } else {
               alert("❌ 登録失敗: " + json.message);
             }
