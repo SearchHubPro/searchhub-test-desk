@@ -2774,7 +2774,8 @@ async function syncPatrolData() {
             const avgNewPrice = (p.stats.avg90 && p.stats.avg90[1] > 0) ? p.stats.avg90[1] : 0;
             const marketUnclear = (usedOffers <= 1) || (avgUsed > 0 && avgNewPrice > 0 && avgUsed >= avgNewPrice * 0.95);
             window.tmpMarketUnclear = marketUnclear;
-            const drops = p.stats.salesRankDrops90 || 0; 
+            const drops = p.stats.salesRankDrops90 || 0;
+            const drops30 = p.stats.salesRankDrops30 || 0; 
             const mSales = Math.floor(drops / 3);
             // 🚀 シートの「自分流ロジック（7点満点）」を計算
             let score = 0;
@@ -2896,7 +2897,9 @@ async function syncPatrolData() {
                   ${bbNote ? `<div style="font-size:11px; color:#718096; margin-top:2px;">${bbNote}</div>` : ''}
                 </div>
               </div>
-              
+
+              ${dropsBand(drops, drops30)}
+
               <div class="calc-box">
                 <div class="calc-row"><span>仕入れ値</span><input type="number" id="bPrice" value="${patrolOrigin && patrolOrigin.price > 0 ? patrolOrigin.price : ''}" placeholder="0" onfocus="this.placeholder=''" onblur="this.placeholder='0'"></div>
                 <div class="calc-row"><span>経費/送料</span><input type="number" id="ePrice" placeholder="0" onfocus="this.placeholder=''" onblur="this.placeholder='0'"></div>
@@ -5597,6 +5600,35 @@ async function syncPatrolData() {
     //   recovering(今の価格が30日平均以上)なら、下がっていても「下げ止まり」として扱う。
     //   一度だけ段差で下がった商品や、下がったあと戻してきている商品を
     //   「下落中」と誤って読まないため。
+    // 🌟 ドロップ数(ランキングが下がった回数＝売れた回数の目安)を1本の帯にする。
+    //   90日と30日を並べて、右に読み方を一言。
+    //   90日 ÷ 3 が普段の月あたりの目安。30日がそれを大きく下回っていれば
+    //   「直近が鈍い」、大きく上回っていれば「直近が伸びている」。
+    //   Keepaへの問い合わせは増えない(ランクを付けるときに既に読んでいる値)。
+    function dropsBand(d90, d30) {
+      const a = Number(d90) || 0;
+      const b = Number(d30) || 0;
+      const monthly = Math.floor(a / 3);
+      let note = '<span style="color:#a0aec0;">動きが見えない</span>';
+      if (a > 0) {
+        if (b === 0) note = '<span style="color:#c53030;">直近30日は動きなし（普段は月' + monthly + '個ほど）</span>';
+        else if (monthly > 0 && b < monthly * 0.6) note = '<span style="color:#c53030;">直近が鈍い（普段は月' + monthly + '個ほど）</span>';
+        else if (monthly > 0 && b > monthly * 1.4) note = '<span style="color:#2f855a;">直近が伸びている（普段は月' + monthly + '個ほど）</span>';
+        else note = '<span style="color:#2f855a;">月' + monthly + '個ほど</span>';
+      }
+      const num = function (n) {
+        return '<b style="font-size:17px; font-weight:900; margin:0 3px;">' + n + '</b>';
+      };
+      return '<div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; padding:9px 12px;'
+        + ' background:#fffaf0; border:1px solid #fbd38d; border-radius:8px; flex-wrap:wrap;">'
+        + '<span style="font-size:11px; color:#b7791f; font-weight:900; white-space:nowrap;">ドロップ</span>'
+        + '<span style="font-size:11.5px; color:#975a16; font-weight:bold; white-space:nowrap;">90日' + num(a) + '回</span>'
+        + '<span style="color:#fbd38d;">／</span>'
+        + '<span style="font-size:11.5px; color:#975a16; font-weight:bold; white-space:nowrap;">30日' + num(b) + '回</span>'
+        + '<span style="margin-left:auto; font-size:11.5px; font-weight:800; white-space:nowrap;">' + note + '</span>'
+        + '</div>';
+    }
+
     function trendLabel(v, recovering) {
       if (v === null || v === undefined || v === "") return '<span style="color:#a0aec0;">-</span>';
       const n = Number(v);
