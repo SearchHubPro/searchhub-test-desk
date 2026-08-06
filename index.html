@@ -117,6 +117,58 @@
     .card.read-card .price-tag { color: #6c757d !important; }
     .card.read-card .status-tag { color: #6c757d !important; }
     .card.read-card .auto-asin-btn { background: #6c757d !important; opacity: 0.7; }
+
+    /* 🌟 巡回リスト(スナイパー/ウォッチャー)の1行カード。
+       閉じている時は1行だけ。押した1件だけが開く。 */
+    .pl-card { padding: 0 !important; margin-bottom: 8px !important; overflow: hidden; }
+    .pl-row { display: flex; align-items: center; gap: 12px; padding: 8px 12px; cursor: pointer; }
+    .pl-row.pl-flat { cursor: default; }
+    .pl-th { width: 40px; height: 40px; flex: none; border: 1px solid #e2e8f0; border-radius: 6px; background: #fff; object-fit: contain; }
+    .card.read-card .pl-th { opacity: 0.5; }
+    .pl-ttl { flex: 1; min-width: 0; font-size: 13.5px; font-weight: bold; color: #2b6cb0; text-decoration: none;
+              white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .card.read-card .pl-ttl { color: #6c757d !important; }
+    .pl-kv { font-size: 11px; color: #718096; white-space: nowrap; }
+    .pl-kv b { font-size: 15px; color: #1a202c; font-weight: 800; margin-left: 3px; }
+    .pl-pf { font-size: 11px; color: #718096; white-space: nowrap; }
+    .pl-pf b { font-size: 15px; font-weight: 800; margin-left: 3px; }
+    .pl-pf i { font-style: normal; font-size: 11px; font-weight: 700; margin-left: 3px; }
+    .pl-pf.pos b, .pl-pf.pos i { color: #276749; }
+    .pl-pf.neg b, .pl-pf.neg i { color: #c53030; }
+    .pl-bd { font-size: 10.5px; font-weight: 700; color: #fff; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+    .pl-buy { background: #38a169; }
+    .pl-half { background: #dd6b20; }
+    .pl-no { background: #a0aec0; }
+    .pl-none { background: #e2e8f0; color: #718096; }
+    .pl-dt { font-size: 11px; color: #a0aec0; white-space: nowrap; width: 74px; text-align: right; }
+    .pl-car { font-size: 11px; color: #a0aec0; width: 12px; text-align: center; }
+    .pl-body { display: none; padding: 0 12px 12px 64px; }
+    .pl-card.pl-open { border-color: #bee3f8; box-shadow: 0 2px 10px rgba(43,108,176,0.12); }
+    .pl-card.pl-open .pl-body { display: block; }
+    table.pl-rows { width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; }
+    table.pl-rows th { font-size: 10.5px; color: #718096; font-weight: 700; background: #edf2f7; padding: 6px 10px; text-align: right; }
+    table.pl-rows th:first-child { text-align: left; }
+    table.pl-rows td { padding: 8px 10px; font-size: 14px; text-align: right; background: #f7fafc; border-top: 1px solid #e2e8f0; }
+    table.pl-rows tr.pl-hit td { background: #f0fff4; }
+    td.pl-rk { text-align: left; font-size: 11.5px; color: #718096; font-weight: 700; }
+    td.pl-v { color: #2d3748; font-weight: 700; }
+    td.pl-v2 { color: #4a5568; font-weight: 700; }
+    td.pl-p { font-weight: 800; color: #c53030; white-space: nowrap; }
+    tr.pl-hit td.pl-p { color: #276749; }
+    td.pl-p span { font-size: 11.5px; font-weight: 700; margin-left: 4px; }
+    .pl-note { font-size: 10.5px; color: #a0aec0; margin-top: 7px; }
+    .pl-acts { display: flex; gap: 8px; margin-top: 10px; }
+    .pl-acts .auto-asin-btn { margin-top: 0; flex: 1; }
+    .pl-open-btn { background: #fff; color: #2b6cb0; border: 1px solid #bee3f8; border-radius: 6px; padding: 0 18px;
+                   font-size: 12.5px; font-weight: bold; text-decoration: none; display: flex; align-items: center; white-space: nowrap; }
+    /* 🌟 既読でグレーになった行は、赤も緑も出さない */
+    .card.read-card .pl-kv, .card.read-card .pl-kv b,
+    .card.read-card .pl-pf, .card.read-card .pl-pf b, .card.read-card .pl-pf i,
+    .card.read-card table.pl-rows th, .card.read-card td.pl-rk, .card.read-card td.pl-v,
+    .card.read-card td.pl-v2, .card.read-card td.pl-p, .card.read-card .pl-note { color: #6c757d !important; }
+    .card.read-card table.pl-rows tr.pl-hit td { background: #f7fafc !important; }
+    .card.read-card .pl-bd { background: #adb5bd !important; color: #fff !important; }
+
     .no-data { text-align: center; color: #a0aec0; padding: 30px 10px; font-size: 12px; }
     .loading-spinner { text-align: center; padding: 40px; font-size: 13px; color: #2b6cb0; font-weight: bold; }
     .search-box { display: flex; gap: 6px; margin-bottom: 12px; }
@@ -192,10 +244,13 @@
       .dash-btn i { font-size: 32px; margin-bottom: 4px; }
       .dash-btn:hover { transform: translateY(-3px); box-shadow: 0 6px 15px rgba(0,0,0,0.1); background-color: #f8fafc; }
       .tab-content.active {
-        display: grid !important; 
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
+        display: grid !important;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
         gap: 16px;
       }
+      /* 🌟 巡回リストだけは横に並べず、1行ずつ縦に積む */
+      #view-sniper .tab-content.active,
+      #view-watcher .tab-content.active { display: block !important; }
       #amazonHistoryArea {
         display: grid !important;
         flex-direction: row !important;
@@ -2195,6 +2250,121 @@
         }
       }
     });
+    // 🌟 巡回リスト(スナイパー/ウォッチャー)の1行カードを作る。
+    //
+    //   閉じている時は1行だけ。押した1件だけが開いて、内訳とボタンが出る。
+    //   横幅があるぶん、全部を開いたまま並べるとすぐ画面から溢れるため。
+    //
+    //   出している数字は、どれも仕入れリストが既に持っているもの。
+    //     相場(90日平均) / その仕入上限 / 今の最安値 / その仕入上限
+    //   利益は「今この出品価格で買った場合」で出す。
+    //
+    //   ヤフオクはオークションなので出品価格を出さない。
+    //   買える金額(仕入上限)だけ出して、入札の上限として見てもらう。
+    //   利益は買値が決まらないと出せないので、その列ごと出さない。
+    //
+    //   相場が取れていない商品は、表を出さずこれまでの1行表示にする。
+    function togglePatrolCard(rowEl) {
+      const card = rowEl.closest('.pl-card');
+      if (!card) return;
+      const wasOpen = card.classList.contains('pl-open');
+      document.querySelectorAll('.pl-card.pl-open').forEach(function (c) { c.classList.remove('pl-open'); });
+      if (!wasOpen) card.classList.add('pl-open');
+    }
+
+    function buildPatrolCardPC(item, gasSiteName, dateTimeText, uniqueKey) {
+      const siteName = String(gasSiteName || '').replace(/^S/, '');
+      const isAuction = (siteName === 'ヤフオク');
+      // 🌟 マイナスは「¥-1,070」ではなく「-¥1,070」で出す
+      const yen = function (n) {
+        const v = Number(n || 0);
+        return (v < 0 ? '-¥' : '¥') + Math.abs(v).toLocaleString();
+      };
+      const has = function (v) { return v !== null && v !== undefined && !isNaN(Number(v)); };
+
+      // 🌟 写真が無い商品は、枠だけ置くと空白がぽっかり空くので何も置かない
+      const thumb = item.img
+        ? '<img class="pl-th" src="' + item.img + '" loading="lazy" alt="" onerror="this.onerror=null; this.style.display=\'none\';">'
+        : '';
+      const titleLink = '<a class="pl-ttl" href="' + item.url + '" target="_blank" data-key="' + uniqueKey + '" data-url="' + item.url + '" onclick="event.stopPropagation(); markAsRead(this);">💎 ' + escapeHtml(item.title) + '</a>';
+      const dateHtml = '<span class="pl-dt">' + (dateTimeText || '') + '</span>';
+
+      const asinBtn = (item.asin && item.asin !== "undefined")
+        ? '<button class="auto-asin-btn" data-key="' + uniqueKey + '" data-url="' + item.url + '" onclick="event.stopPropagation(); markAsRead(this); openView(\'view-amazon\'); jumpToAmazonResearch(\'' + escapeHtml(item.asin) + '\', \'' + escapeHtml(item.title) + '\', \'' + item.url + '\', \'' + escapeHtml(String(item.price || '')) + '\', \'' + escapeHtml(siteName) + '\')">' +
+          '<span style="font-size:14px;">📦</span> ASIN: ' + escapeHtml(item.asin) + ' で一発解析</button>'
+        : '';
+      const openBtn = '<a class="pl-open-btn" href="' + item.url + '" target="_blank" data-key="' + uniqueKey + '" data-url="' + item.url + '" onclick="event.stopPropagation(); markAsRead(this);">🔗 出品ページを開く</a>';
+
+      const listPrice = Number(item.listPrice || 0);
+      const souba = Number(item.sellPrice || 0);
+
+      // 相場が無い(仕入れリストから消した・まだリサーチ前など)ときは、開かない1行
+      if (!(souba > 0) || (!isAuction && !(listPrice > 0))) {
+        return '<div class="pl-row pl-flat">' + thumb + titleLink +
+          '<span class="status-tag" style="font-size:12px;">' + escapeHtml(item.status) + '</span>' +
+          (isAuction ? '' : '<span class="price-tag">' + escapeHtml(item.price) + '</span>') +
+          dateHtml + '<span class="pl-car"></span></div>' +
+          (asinBtn ? '<div class="pl-body" style="display:block; padding:0 12px 12px 64px;"><div class="pl-acts">' + asinBtn + openBtn + '</div></div>' : '');
+      }
+
+      const okAvg = has(item.profitAvg) && Number(item.profitAvg) > 0;
+      const okMin = has(item.profitMin) && Number(item.profitMin) > 0;
+
+      // 行の右側(閉じていても見える部分)
+      let headRight;
+      if (isAuction) {
+        headRight = '<span class="status-tag" style="font-size:12px;">' + escapeHtml(item.status) + '</span>' +
+          '<span class="pl-kv">仕入上限<b>' + yen(item.buyPrice) + '</b></span>' +
+          '<span class="pl-bd pl-none">—</span>';
+      } else {
+        // 平均・最安のうち、良いほうの利益を1つだけ出す
+        const bestProfit = has(item.profitAvg) && has(item.profitMin)
+          ? Math.max(Number(item.profitAvg), Number(item.profitMin))
+          : (has(item.profitAvg) ? Number(item.profitAvg) : (has(item.profitMin) ? Number(item.profitMin) : null));
+        const bestRate = (bestProfit !== null && Number(item.profitAvg) === bestProfit) ? item.rateAvg : item.rateMin;
+        const pfHtml = (bestProfit === null)
+          ? ''
+          : '<span class="pl-pf ' + (bestProfit > 0 ? 'pos' : 'neg') + '">利益<b>' + yen(bestProfit) + '</b>' +
+            (has(bestRate) ? '<i>' + Number(bestRate) + '%</i>' : '') + '</span>';
+        let badge = '<span class="pl-bd pl-no">見送り</span>';
+        if (okAvg && okMin) badge = '<span class="pl-bd pl-buy">買い</span>';
+        else if (okAvg) badge = '<span class="pl-bd pl-half">平均のみ</span>';
+        headRight = '<span class="pl-kv">出品<b>' + yen(listPrice) + '</b></span>' + pfHtml + badge;
+      }
+
+      const row = function (label, soubaVal, limitVal, profitVal, rateVal) {
+        if (!(Number(soubaVal) > 0)) {
+          return '<tr><td class="pl-rk">' + label + '</td><td class="pl-v">—</td><td class="pl-v2">—</td>' +
+            (isAuction ? '' : '<td class="pl-p">—</td>') + '</tr>';
+        }
+        const ok = has(profitVal) && Number(profitVal) > 0;
+        const profitCell = has(profitVal)
+          ? yen(profitVal) + '<span>' + (has(rateVal) ? Number(rateVal) + '%' : '') + '</span>'
+          : '—';
+        return '<tr class="' + (!isAuction && ok ? 'pl-hit' : '') + '">' +
+          '<td class="pl-rk">' + label + '</td>' +
+          '<td class="pl-v">' + yen(soubaVal) + '</td>' +
+          '<td class="pl-v2">' + yen(limitVal) + '</td>' +
+          (isAuction ? '' : '<td class="pl-p">' + profitCell + '</td>') + '</tr>';
+      };
+
+      return '<div class="pl-row" onclick="togglePatrolCard(this)">' + thumb + titleLink + headRight + dateHtml +
+        '<span class="pl-car">▾</span></div>' +
+        '<div class="pl-body">' +
+        '<table class="pl-rows">' +
+        '<tr><th>基準</th><th>相場</th><th>仕入上限</th>' + (isAuction ? '' : '<th>利益</th>') + '</tr>' +
+        row('90日平均', item.sellPrice, item.buyPrice, item.profitAvg, item.rateAvg) +
+        row('最安値', item.minUsed, item.minBuy, item.profitMin, item.rateMin) +
+        '</table>' +
+        '<div class="pl-note">' +
+        (isAuction
+          ? '仕入上限まで。オークションなので利益は落札額で決まります'
+          : '利益はこの出品価格 ' + yen(listPrice) + ' で買った場合') +
+        '</div>' +
+        '<div class="pl-acts">' + asinBtn + openBtn + '</div>' +
+        '</div>';
+    }
+
 async function syncPatrolData() {
           document.getElementById("lastUpdate").innerText = "データ同期中...";
           loadNotices(); // 🌟 同期を走らせるときは、お知らせも必ず取り直す
@@ -2234,7 +2404,7 @@ async function syncPatrolData() {
                   const isNew = item.status.includes("あり") && !item.status.includes("変化なし");
                   const isRead = item.viewed || globalViewedLinks.includes(uniqueKey);
                   const card = document.createElement("div");
-                  card.className = "card" + (isRead ? " read-card" : "") + (isNew && !isRead ? " is-new-item" : "");
+                  card.className = "card pl-card" + (isRead ? " read-card" : "") + (isNew && !isRead ? " is-new-item" : "");
                   let dateTimeText = "";
                   if (item.dateStr) {
                     const d = new Date(item.dateStr);
@@ -2242,14 +2412,8 @@ async function syncPatrolData() {
                       dateTimeText = (d.getMonth() + 1) + "/" + d.getDate() + " " + String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
                     }
                   }
-                  let htmlStr = '<div class="item-title"><a href="' + item.url + '" target="_blank" data-key="' + uniqueKey + '" data-url="' + item.url + '" onclick="markAsRead(this)">💎 ' + escapeHtml(item.title) + '</a></div>' +
-                    '<div class="item-meta"><span>' + '<span class="status-tag">' + escapeHtml(item.status) + '</span>' + (dateTimeText ? ' <span class="date-tag" style="font-size:11px; color:#a0aec0;">' + dateTimeText + '</span>' : '') + '</span>' + '<span class="price-tag">' + escapeHtml(item.price) + '</span></div>';
-                  if (item.asin && item.asin !== "undefined") {
-                    htmlStr += '<div style="margin-top:10px; border-top:1px dashed #e2e8f0; padding-top:10px;">' +
-                      '<button class="auto-asin-btn" data-key="' + uniqueKey + '" data-url="' + item.url + '" onclick="markAsRead(this); openView(\'view-amazon\'); jumpToAmazonResearch(\'' + escapeHtml(item.asin) + '\', \'' + escapeHtml(item.title) + '\', \'' + item.url + '\', \'' + escapeHtml(String(item.price || '')) + '\', \'' + escapeHtml(gasSiteName.replace(/^S/, '')) + '\')">' +
-                      '<span style="font-size:14px;">📦</span> ASIN: ' + escapeHtml(item.asin) + ' で一発解析</button></div>';
-                  }
-                  card.innerHTML = htmlStr; container.appendChild(card);
+                  card.innerHTML = buildPatrolCardPC(item, gasSiteName, dateTimeText, uniqueKey);
+                  container.appendChild(card);
                 });
               }
             }
